@@ -117,3 +117,11 @@ h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin-b
 .pie-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
 
 .pie-explain { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 10px; text-align: left; }
+
+#bankCost { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.bank-picker { margin-bottom: 16px; }
+.bank-picker label { display: flex; flex-direction: column; gap: 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); max-width: 280px; }
+.bank-picker select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-family: inherit; font-size: 14px; }
+.bank-total { font-size: 40px; font-weight: 700; color: var(--gold); margin: 8px 0 16px; }
+.bank-detail div { font-size: 14px; padding: 5px 0; color: var(--text); }
+.bank-detail .bank-note { color: var(--muted); font-size: 13px; margin-top: 10px; line-height: 1.5; }

@@ -33,7 +33,7 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, results []LenderResult, strategy loancalc.StrategyResult) {
+templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult) {
 	@Layout("LoanExitIQ") {
 		<h1>LoanExitIQ</h1>
 		<div class="tabs">
@@ -71,7 +71,7 @@ templ Index(stats StatsData, results []LenderResult, strategy loancalc.StrategyR
 						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
 				</label>
 				<label>
-					Lender / product
+					Exit strategy lender
 					<span class="val">&nbsp;</span>
 					<select name="lender" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#allInputs">
 						for i, l := range loancalc.StrategyLenders {
@@ -83,7 +83,7 @@ templ Index(stats StatsData, results []LenderResult, strategy loancalc.StrategyR
 			<div id="stats">
 				@Stats(stats)
 			</div>
-			@Leaderboard(results)
+			@BankCost(bank)
 			@StrategyPanel(strategy)
 		</div>
 		<div id="suggestionTabWrapper" class="tab-panel" style="display:none">
@@ -101,20 +101,27 @@ templ Stats(s StatsData) {
 	</div>
 }
 
-templ Leaderboard(results []LenderResult) {
-	<div id="leaderboard" hx-swap-oob="true">
-		<h2>Total cost of exit, lender by lender</h2>
-		for _, r := range results {
-			<div class="lender-row">
-				{ r.Name } · { ratePctStr(r.RatePct) }% · { r.Note } : { formatINR(r.Total) }
-				if r.IsBest {
-					<span> (cheapest)</span>
-				}
-				if r.IsWorst {
-					<span> (most expensive)</span>
-				}
-			</div>
-		}
+templ BankCost(b LenderResult) {
+	<div id="bankCost" hx-swap-oob="true">
+		<h2>Total cost of exit</h2>
+		<div class="bank-picker">
+			<label>
+				Bank
+				<select name="bank" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#allInputs">
+					for i, l := range loancalc.Lenders {
+						<option value={ itoa(i) }>{ l.Name }</option>
+					}
+				</select>
+			</label>
+		</div>
+		<div class="bank-total">{ formatINR(b.Total) }</div>
+		<div class="bank-detail">
+			<div>Interest rate: { ratePctStr(b.RatePct) }% p.a. (assumed)</div>
+			<div>Foreclosure fee at this exit month: { ratePctStr(b.FeePct) }%</div>
+			<div>Interest paid over holding period: { formatINR(b.InterestPaid) }</div>
+			<div>Foreclosure fee + GST: { formatINR(b.Fee) }</div>
+			<div class="bank-note">{ b.Note }</div>
+		</div>
 	</div>
 }
 
@@ -191,9 +198,9 @@ templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
 	</div>
 }
 
-templ CalcResponse(stats StatsData, results []LenderResult, strategy loancalc.StrategyResult) {
+templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult) {
 	@Stats(stats)
-	@Leaderboard(results)
+	@BankCost(bank)
 	@StrategyPanel(strategy)
 	@ComparisonPies(stats, strategy)
 }

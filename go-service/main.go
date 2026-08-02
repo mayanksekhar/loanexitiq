@@ -40,23 +40,21 @@ func computeStats(amount, rate float64, tenure, exit int) templates.StatsData {
 	}
 }
 
-func computeLeaderboard(amount, rate float64, tenure, exit int) []templates.LenderResult {
+func computeBankCost(amount, rate float64, tenure, exit, bankIdx int) templates.LenderResult {
 	exit = clampExit(tenure, exit)
-	results := loancalc.ComputeLeaderboard(amount, rate, tenure, exit, true)
-	out := make([]templates.LenderResult, len(results))
-	for i, r := range results {
-		out[i] = templates.LenderResult{
-			Name:         r.Name,
-			Note:         r.Note,
-			RatePct:      r.RatePct,
-			InterestPaid: r.InterestPaid,
-			Fee:          r.Fee,
-			Total:        r.Total,
-			IsBest:       r.IsBest,
-			IsWorst:      r.IsWorst,
-		}
+	if bankIdx < 0 || bankIdx >= len(loancalc.Lenders) {
+		bankIdx = 0
 	}
-	return out
+	r := loancalc.ComputeForLender(amount, rate, tenure, exit, true, bankIdx)
+	return templates.LenderResult{
+		Name:         r.Name,
+		Note:         r.Note,
+		RatePct:      r.RatePct,
+		InterestPaid: r.InterestPaid,
+		Fee:          r.Fee,
+		FeePct:       r.FeePct,
+		Total:        r.Total,
+	}
 }
 
 func computeStrategyResult(amount, rate float64, tenure, exit, lenderIdx int) loancalc.StrategyResult {
@@ -73,9 +71,9 @@ func main() {
 
 	r.GET("/", func(c *gin.Context) {
 		stats := computeStats(30000000, 10.5, 60, 18)
-		results := computeLeaderboard(30000000, 10.5, 60, 18)
+		bank := computeBankCost(30000000, 10.5, 60, 18, 0)
 		strategy := computeStrategyResult(30000000, 10.5, 60, 18, 0)
-		templ.Handler(templates.Index(stats, results, strategy)).ServeHTTP(c.Writer, c.Request)
+		templ.Handler(templates.Index(stats, bank, strategy)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.POST("/calculate", func(c *gin.Context) {
@@ -83,12 +81,13 @@ func main() {
 		rate, _ := strconv.ParseFloat(c.PostForm("rate"), 64)
 		tenure, _ := strconv.Atoi(c.PostForm("tenure"))
 		exit, _ := strconv.Atoi(c.PostForm("exit"))
+		bankIdx, _ := strconv.Atoi(c.PostForm("bank"))
 		lenderIdx, _ := strconv.Atoi(c.PostForm("lender"))
 
 		stats := computeStats(amount, rate, tenure, exit)
-		results := computeLeaderboard(amount, rate, tenure, exit)
+		bank := computeBankCost(amount, rate, tenure, exit, bankIdx)
 		strategy := computeStrategyResult(amount, rate, tenure, exit, lenderIdx)
-		templ.Handler(templates.CalcResponse(stats, results, strategy)).ServeHTTP(c.Writer, c.Request)
+		templ.Handler(templates.CalcResponse(stats, bank, strategy)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.Run(":8080")

@@ -49,6 +49,10 @@ var Lenders = []Lender{
 		[]FeeTier{{0, 3}}},
 	{"AU Small Finance Bank", "5% within 12mo, 4% after, no part-pay allowed", 2.0,
 		[]FeeTier{{12, 5}, {0, 4}}},
+	{"Canara Bank LAP", "nil prepayment and foreclosure charges (floating rate)", -0.15,
+		[]FeeTier{{0, 0}}},
+	{"Indian Bank LAP", "nil prepayment and foreclosure charges (floating rate)", -0.1,
+		[]FeeTier{{0, 0}}},
 }
 
 type LenderResult struct {
@@ -57,6 +61,7 @@ type LenderResult struct {
 	RatePct      float64
 	InterestPaid float64
 	Fee          float64
+	FeePct       float64
 	Total        float64
 	IsBest       bool
 	IsWorst      bool
@@ -64,36 +69,42 @@ type LenderResult struct {
 
 func ComputeLeaderboard(P, rate float64, tenure, exit int, isFirm bool) []LenderResult {
 	results := make([]LenderResult, 0, len(Lenders))
-	for _, l := range Lenders {
-		r2 := rate + l.DRate
-		_, rows := Schedule(P, r2, tenure)
-		bal := rows[exit-1].Balance
-
-		var interestPaid float64
-		for i := 0; i < exit; i++ {
-			interestPaid += rows[i].Interest
-		}
-
-		feePct := l.FeeAt(exit)
-		if !isFirm {
-			feePct = 0
-		}
-		fee := bal * feePct / 100 * 1.18
-
-		results = append(results, LenderResult{
-			Name:         l.Name,
-			Note:         l.Note,
-			RatePct:      r2,
-			InterestPaid: interestPaid,
-			Fee:          fee,
-			Total:        interestPaid + fee,
-		})
+	for i := range Lenders {
+		results = append(results, ComputeForLender(P, rate, tenure, exit, isFirm, i))
 	}
-
 	sort.Slice(results, func(i, j int) bool { return results[i].Total < results[j].Total })
 	if len(results) > 0 {
 		results[0].IsBest = true
 		results[len(results)-1].IsWorst = true
 	}
 	return results
+}
+
+// ComputeForLender returns the full cost breakdown for a single lender by index.
+func ComputeForLender(P, rate float64, tenure, exit int, isFirm bool, lenderIdx int) LenderResult {
+	l := Lenders[lenderIdx]
+	r2 := rate + l.DRate
+	_, rows := Schedule(P, r2, tenure)
+	bal := rows[exit-1].Balance
+
+	var interestPaid float64
+	for i := 0; i < exit; i++ {
+		interestPaid += rows[i].Interest
+	}
+
+	feePct := l.FeeAt(exit)
+	if !isFirm {
+		feePct = 0
+	}
+	fee := bal * feePct / 100 * 1.18
+
+	return LenderResult{
+		Name:         l.Name,
+		Note:         l.Note,
+		RatePct:      r2,
+		InterestPaid: interestPaid,
+		Fee:          fee,
+		FeePct:       feePct,
+		Total:        interestPaid + fee,
+	}
 }

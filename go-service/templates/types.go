@@ -56,6 +56,7 @@ type LenderResult struct {
 	RatePct      float64
 	InterestPaid float64
 	Fee          float64
+	FeePct       float64
 	Total        float64
 	IsBest       bool
 	IsWorst      bool
@@ -76,3 +77,5 @@ func donutSlice(part, total float64) string {
 	}
 	return strconv.FormatFloat(sliceLen, 'f', 2, 64) + " " + strconv.FormatFloat(remainder, 'f', 2, 64)
 }
+
+// note: LenderResult.FeePct added for single-bank view
