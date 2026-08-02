@@ -12,14 +12,20 @@ const (
 )
 
 type Strategy struct {
-	Type            StrategyType
-	Title           string
-	Mechanics       string
-	ClawbackMonths  int
-	CapPct          float64
-	Quarters        int
-	SeasoningMonths int
-	ImmediateFeePct float64
+	Type                StrategyType
+	Title               string
+	Mechanics           string
+	ClawbackMonths      int
+	CapPct              float64
+	Periods             int
+	PeriodMonths        int
+	NoPrepayFirstPeriod bool
+	SeasoningMonths     int
+	FeeTiers            []FeeTier
+}
+
+func (s Strategy) FeeAt(exitMonth int) float64 {
+	return feeAtTiers(s.FeeTiers, exitMonth)
 }
 
 type StrategyLender struct {
@@ -28,28 +34,54 @@ type StrategyLender struct {
 	Strategy Strategy
 }
 
+// Verified against published lender fee schedules, Aug 2026. See docs/SOURCES.md.
 var StrategyLenders = []StrategyLender{
-	{"ICICI LAP", 0, Strategy{Type: StrategyStub, Title: "Stub strategy: defuse the clawback",
-		Mechanics: "Part-payments are free, but full foreclosure within 12 months of a part-payment triggers a retroactive clawback of the fee on the part-paid amount. Part-pay almost everything today at Rs 0 charge, keep a small stub on EMI for 12 months to defuse the clawback, then foreclose only the residue.",
-		ClawbackMonths: 12, ImmediateFeePct: 4}},
-	{"Kotak business", 0, Strategy{Type: StrategyNone, Title: "No escape route: fixed rate",
-		Mechanics: "Fixed-rate loan. The foreclosure fee applies regardless of RBI's Jan 2026 floating-rate prepayment ban, since that reform covers floating-rate loans only.",
-		ImmediateFeePct: 4}},
-	{"HDFC", -0.1, Strategy{Type: StrategyNone, Title: "No documented escape clause",
-		Mechanics: "No published part-payment or seasoning waiver found for non-individual borrowers on this product.",
-		ImmediateFeePct: 2.5}},
-	{"SBI SME term", -0.2, Strategy{Type: StrategyNone, Title: "No documented escape clause",
-		Mechanics: "No published part-payment or seasoning waiver found for this product.",
-		ImmediateFeePct: 2}},
-	{"Axis staggered", 0.1, Strategy{Type: StrategyStaggered, Title: "Quarterly 25% part-pay ladder",
-		Mechanics: "No charge on part-prepayment up to 25% of principal outstanding per calendar quarter, with no prepayment allowed in the first quarter. Stagger the payoff across roughly five quarters instead of a lump-sum foreclosure.",
-		CapPct: 25, Quarters: 5, ImmediateFeePct: 2}},
-	{"Small Finance Bank", 2.0, Strategy{Type: StrategyNone, Title: "No escape route: worst structure",
-		Mechanics: "Part-prepayment is not allowed at all on this product.",
-		ImmediateFeePct: 3}},
-	{"ICICI Instalment (MSME)", 0.2, Strategy{Type: StrategySeasoning, Title: "MSME waiver or 24-month seasoning",
-		Mechanics: "A separate ICICI instalment product. MSME classification plus closing with own funds waives the fee immediately; otherwise the fee drops to 0% after 24 months of seasoning.",
-		SeasoningMonths: 24, ImmediateFeePct: 4}},
+	{"ICICI LAP", 0, Strategy{
+		Type: StrategyStub, Title: "Stub strategy: defuse the clawback",
+		Mechanics:      "Part-payments are free, but full foreclosure within 12 months of a part-payment triggers a retroactive clawback of the fee on the part-paid amount. Part-pay almost everything today at Rs 0 charge, keep a small stub on EMI for 12 months to defuse the clawback, then foreclose only the residue.",
+		ClawbackMonths: 12,
+		FeeTiers:       []FeeTier{{0, 4}},
+	}},
+	{"Kotak business", 0, Strategy{
+		Type: StrategyStub, Title: "Stub strategy: defuse the 12-month clawback",
+		Mechanics:      "Kotak's business loan charges 4% plus GST on the outstanding at foreclosure, and an additional 4% plus GST on any amount part-prepaid in the preceding 12 months. Part-pay down to a small stub today, hold it on EMI for 12 months so that clawback window closes, then foreclose only the residue.",
+		ClawbackMonths: 12,
+		FeeTiers:       []FeeTier{{0, 4}},
+	}},
+	{"HDFC LAP", -0.1, Strategy{
+		Type: StrategyStaggered, Title: "Annual 25% part-pay ladder",
+		Mechanics:    "One part-prepayment per year up to 25% of outstanding principal is free; the excess over that in the same year costs 2.5% plus GST. Spreading the payoff across several annual free tranches instead of one lump-sum foreclosure avoids most of the fee. MSME-classified borrowers closing from own funds get a full waiver instead, worth checking before using this ladder.",
+		CapPct:       25,
+		Periods:      4,
+		PeriodMonths: 12,
+		FeeTiers:     []FeeTier{{0, 2.5}},
+	}},
+	{"SBI term loan", -0.2, Strategy{
+		Type: StrategySeasoning, Title: "Wait out the 24-month window",
+		Mechanics:       "SBI only charges the 3% plus GST foreclosure fee if the loan is closed within 24 months of disbursement. After 24 months, foreclosure is free.",
+		SeasoningMonths: 24,
+		FeeTiers:        []FeeTier{{24, 3}, {0, 0}},
+	}},
+	{"Axis LAP", 0.1, Strategy{
+		Type: StrategyStaggered, Title: "Quarterly 25% part-pay ladder",
+		Mechanics:           "No charge on part-prepayment up to 25% of principal outstanding per calendar quarter, with no prepayment allowed in the first quarter. Stagger the payoff across roughly five quarters instead of a lump-sum foreclosure.",
+		CapPct:              25,
+		Periods:             5,
+		PeriodMonths:        3,
+		NoPrepayFirstPeriod: true,
+		FeeTiers:            []FeeTier{{0, 3}},
+	}},
+	{"AU Small Finance Bank", 2.0, Strategy{
+		Type: StrategyNone, Title: "No escape route: part-prepayment not allowed",
+		Mechanics: "Part-prepayment is not permitted at all on this product. The tiered foreclosure fee, 5% within 12 months of last disbursement, 4% after, applies on the full outstanding with no legal lever to reduce it.",
+		FeeTiers:  []FeeTier{{12, 5}, {0, 4}},
+	}},
+	{"ICICI Instalment (MSME)", 0.2, Strategy{
+		Type: StrategySeasoning, Title: "MSME waiver or 24-month seasoning",
+		Mechanics:       "A separate ICICI instalment product, not the LAP loan above. MSME classification plus closing with own funds waives the fee immediately; otherwise the fee drops to 0% after 24 months of seasoning.",
+		SeasoningMonths: 24,
+		FeeTiers:        []FeeTier{{0, 4}},
+	}},
 }
 
 type DetailRow struct {
@@ -81,7 +113,7 @@ func ComputeStrategy(P, rate float64, tenure, exit int, isFirm bool, lenderIdx i
 	_, rows := Schedule(P, rate2, tenure)
 	bal := rows[exit-1].Balance
 
-	feePctNow := s.ImmediateFeePct
+	feePctNow := s.FeeAt(exit)
 	if !isFirm {
 		feePctNow = 0
 	}
@@ -133,14 +165,22 @@ func ComputeStrategy(P, rate float64, tenure, exit int, isFirm bool, lenderIdx i
 		E2 := EMI(P, rate2, tenure)
 		balS := bal
 		intCarried := 0.0
-		for mo := 0; mo < 3 && balS > 1; mo++ {
-			iMo := balS * r
-			intCarried += iMo
-			balS -= math.Min(E2-iMo, balS)
+		periodMonths := s.PeriodMonths
+		if periodMonths == 0 {
+			periodMonths = 3
+		}
+		startPeriod := 0
+		if s.NoPrepayFirstPeriod {
+			for mo := 0; mo < periodMonths && balS > 1; mo++ {
+				iMo := balS * r
+				intCarried += iMo
+				balS -= math.Min(E2-iMo, balS)
+			}
+			startPeriod = 1
 		}
 		lump := balS * s.CapPct / 100
-		for q := 1; q < s.Quarters && balS > 1; q++ {
-			for mo := 0; mo < 3 && balS > 1; mo++ {
+		for p := startPeriod; p < s.Periods && balS > 1; p++ {
+			for mo := 0; mo < periodMonths && balS > 1; mo++ {
 				iMo := balS * r
 				intCarried += iMo
 				balS -= math.Min(E2-iMo, balS)

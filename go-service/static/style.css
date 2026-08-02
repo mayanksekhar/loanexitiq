@@ -1,0 +1,102 @@
+:root {
+  --ink: #0C1118;
+  --panel: #131A24;
+  --panel2: #0F1620;
+  --line: #223041;
+  --text: #E8EDF4;
+  --muted: #8FA0B3;
+  --gold: #E9B44C;
+  --fee: #FF6B5E;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+body > * { max-width: 1000px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+
+h1 { font-size: 26px; font-weight: 700; letter-spacing: .04em; padding: 26px 0 20px; }
+h2 { font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 30px 0 14px; font-weight: 500; }
+h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+
+#allInputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+#allInputs label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#allInputs input[type=range] { accent-color: var(--gold); cursor: pointer; }
+#allInputs select {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.stats {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-top: 18px;
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+}
+
+#leaderboard, #strategyPanel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.lender-row { padding: 10px 0; border-bottom: 1px solid var(--panel2); font-size: 14px; }
+.lender-row:last-child { border-bottom: none; }
+.lender-row span { color: var(--gold); font-weight: 600; margin-left: 6px; }
+
+#strategyPanel p { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 16px; max-width: 640px; }
+
+.card {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.card div { font-size: 14px; padding: 5px 0; }
+
+.save-banner, .save-banner-negative {
+  border-radius: var(--radius);
+  padding: 18px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+}
+.save-banner { background: linear-gradient(120deg,#1A2230,#141C28); border: 1px solid var(--gold); color: var(--gold); }
+.save-banner-negative { background: linear-gradient(120deg,#241615,#1c1211); border: 1px solid var(--fee); color: var(--fee); }
+#allInputs .val { font-size: 16px; font-weight: 600; color: var(--text); }
