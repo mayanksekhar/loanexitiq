@@ -45,3 +45,18 @@ func commas(n int64) string {
 func itoa(n int) string {
 	return strconv.Itoa(n)
 }
+
+func ratePctStr(f float64) string {
+	return strconv.FormatFloat(f, 'f', 2, 64)
+}
+
+type LenderResult struct {
+	Name         string
+	Note         string
+	RatePct      float64
+	InterestPaid float64
+	Fee          float64
+	Total        float64
+	IsBest       bool
+	IsWorst      bool
+}

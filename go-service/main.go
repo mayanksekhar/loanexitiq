@@ -36,13 +36,38 @@ func computeStats(amount, rate float64, tenure, exit int) templates.StatsData {
 	}
 }
 
+func computeLeaderboard(amount, rate float64, tenure, exit int) []templates.LenderResult {
+	if exit > tenure-3 {
+		exit = tenure - 3
+	}
+	if exit < 1 {
+		exit = 1
+	}
+	results := loancalc.ComputeLeaderboard(amount, rate, tenure, exit, true)
+	out := make([]templates.LenderResult, len(results))
+	for i, r := range results {
+		out[i] = templates.LenderResult{
+			Name:         r.Name,
+			Note:         r.Note,
+			RatePct:      r.RatePct,
+			InterestPaid: r.InterestPaid,
+			Fee:          r.Fee,
+			Total:        r.Total,
+			IsBest:       r.IsBest,
+			IsWorst:      r.IsWorst,
+		}
+	}
+	return out
+}
+
 func main() {
 	r := gin.Default()
 	r.Static("/static", "./static")
 
 	r.GET("/", func(c *gin.Context) {
 		stats := computeStats(30000000, 10.5, 60, 18)
-		templ.Handler(templates.Index(stats)).ServeHTTP(c.Writer, c.Request)
+		results := computeLeaderboard(30000000, 10.5, 60, 18)
+		templ.Handler(templates.Index(stats, results)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.POST("/calculate", func(c *gin.Context) {
@@ -52,7 +77,8 @@ func main() {
 		exit, _ := strconv.Atoi(c.PostForm("exit"))
 
 		stats := computeStats(amount, rate, tenure, exit)
-		templ.Handler(templates.Stats(stats)).ServeHTTP(c.Writer, c.Request)
+		results := computeLeaderboard(amount, rate, tenure, exit)
+		templ.Handler(templates.CalcResponse(stats, results)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.Run(":8080")
