@@ -60,3 +60,19 @@ type LenderResult struct {
 	IsBest       bool
 	IsWorst      bool
 }
+
+func donutSlice(part, total float64) string {
+	if total <= 0 {
+		return "0 251.33"
+	}
+	const circumference = 251.33 // 2 * pi * 40
+	sliceLen := part / total * circumference
+	if sliceLen < 0 {
+		sliceLen = 0
+	}
+	remainder := circumference - sliceLen
+	if remainder < 0 {
+		remainder = 0
+	}
+	return strconv.FormatFloat(sliceLen, 'f', 2, 64) + " " + strconv.FormatFloat(remainder, 'f', 2, 64)
+}

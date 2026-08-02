@@ -100,3 +100,20 @@ h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin-b
 .save-banner { background: linear-gradient(120deg,#1A2230,#141C28); border: 1px solid var(--gold); color: var(--gold); }
 .save-banner-negative { background: linear-gradient(120deg,#241615,#1c1211); border: 1px solid var(--fee); color: var(--fee); }
 #allInputs .val { font-size: 16px; font-weight: 600; color: var(--text); }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.tab-btn {
+  background: var(--panel); color: var(--muted); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 18px; font-size: 13px; letter-spacing: .04em;
+  cursor: pointer; font-family: inherit;
+}
+.tab-btn.active { background: var(--panel2); color: var(--gold); border-color: var(--gold); }
+
+.pie-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 20px; }
+.pie-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; text-align: center; }
+.pie { width: 160px; height: 160px; margin: 10px auto; }
+.pie-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 13px; text-align: left; }
+.pie-legend span { display: flex; align-items: center; gap: 8px; }
+.pie-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+
+.pie-explain { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 10px; text-align: left; }
