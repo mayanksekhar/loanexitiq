@@ -9,14 +9,18 @@ import (
 	"github.com/mayanksekhar/loanexitiq/go-service/templates"
 )
 
-func computeStats(amount, rate float64, tenure, exit int) templates.StatsData {
+func clampExit(tenure, exit int) int {
 	if exit > tenure-3 {
 		exit = tenure - 3
 	}
 	if exit < 1 {
 		exit = 1
 	}
+	return exit
+}
 
+func computeStats(amount, rate float64, tenure, exit int) templates.StatsData {
+	exit = clampExit(tenure, exit)
 	emi, rows := loancalc.Schedule(amount, rate, tenure)
 
 	var interestPaid float64
@@ -37,12 +41,7 @@ func computeStats(amount, rate float64, tenure, exit int) templates.StatsData {
 }
 
 func computeLeaderboard(amount, rate float64, tenure, exit int) []templates.LenderResult {
-	if exit > tenure-3 {
-		exit = tenure - 3
-	}
-	if exit < 1 {
-		exit = 1
-	}
+	exit = clampExit(tenure, exit)
 	results := loancalc.ComputeLeaderboard(amount, rate, tenure, exit, true)
 	out := make([]templates.LenderResult, len(results))
 	for i, r := range results {
@@ -60,6 +59,14 @@ func computeLeaderboard(amount, rate float64, tenure, exit int) []templates.Lend
 	return out
 }
 
+func computeStrategyResult(amount, rate float64, tenure, exit, lenderIdx int) loancalc.StrategyResult {
+	exit = clampExit(tenure, exit)
+	if lenderIdx < 0 || lenderIdx >= len(loancalc.StrategyLenders) {
+		lenderIdx = 0
+	}
+	return loancalc.ComputeStrategy(amount, rate, tenure, exit, true, lenderIdx)
+}
+
 func main() {
 	r := gin.Default()
 	r.Static("/static", "./static")
@@ -67,7 +74,8 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		stats := computeStats(30000000, 10.5, 60, 18)
 		results := computeLeaderboard(30000000, 10.5, 60, 18)
-		templ.Handler(templates.Index(stats, results)).ServeHTTP(c.Writer, c.Request)
+		strategy := computeStrategyResult(30000000, 10.5, 60, 18, 0)
+		templ.Handler(templates.Index(stats, results, strategy)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.POST("/calculate", func(c *gin.Context) {
@@ -75,10 +83,12 @@ func main() {
 		rate, _ := strconv.ParseFloat(c.PostForm("rate"), 64)
 		tenure, _ := strconv.Atoi(c.PostForm("tenure"))
 		exit, _ := strconv.Atoi(c.PostForm("exit"))
+		lenderIdx, _ := strconv.Atoi(c.PostForm("lender"))
 
 		stats := computeStats(amount, rate, tenure, exit)
 		results := computeLeaderboard(amount, rate, tenure, exit)
-		templ.Handler(templates.CalcResponse(stats, results)).ServeHTTP(c.Writer, c.Request)
+		strategy := computeStrategyResult(amount, rate, tenure, exit, lenderIdx)
+		templ.Handler(templates.CalcResponse(stats, results, strategy)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.Run(":8080")

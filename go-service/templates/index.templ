@@ -1,5 +1,7 @@
 package templates
 
+import "github.com/mayanksekhar/loanexitiq/go-service/loancalc"
+
 templ Layout(title string) {
 	<!DOCTYPE html>
 	<html lang="en">
@@ -15,35 +17,44 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, results []LenderResult) {
+templ Index(stats StatsData, results []LenderResult, strategy loancalc.StrategyResult) {
 	@Layout("LoanExitIQ") {
 		<h1>LoanExitIQ</h1>
-		<div id="controls">
+		<div id="allInputs">
 			<label>
 				Loan amount (Rs)
 				<input type="range" name="amount" min="5000000" max="100000000" step="500000" value="30000000"
-					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
 			</label>
 			<label>
 				Interest rate (% p.a.)
 				<input type="range" name="rate" min="8" max="14" step="0.05" value="10.5"
-					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
 			</label>
 			<label>
 				Tenure (months)
 				<input type="range" name="tenure" min="24" max="240" step="6" value="60"
-					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
 			</label>
 			<label>
 				Exit month
 				<input type="range" name="exit" min="3" max="230" step="1" value="18"
-					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
+			</label>
+			<label>
+				Lender / product
+				<select name="lender" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#allInputs">
+					for i, l := range loancalc.StrategyLenders {
+						<option value={ itoa(i) }>{ l.Name }</option>
+					}
+				</select>
 			</label>
 		</div>
 		<div id="stats">
 			@Stats(stats)
 		</div>
 		@Leaderboard(results)
+		@StrategyPanel(strategy)
 	}
 }
 
@@ -73,7 +84,38 @@ templ Leaderboard(results []LenderResult) {
 	</div>
 }
 
-templ CalcResponse(stats StatsData, results []LenderResult) {
+templ StrategyPanel(s loancalc.StrategyResult) {
+	<div id="strategyPanel" hx-swap-oob="true">
+		<h2>Exit strategy: { s.Title }</h2>
+		<p>{ s.Mechanics }</p>
+		<div class="card">
+			<h3>Foreclose today</h3>
+			<div>Outstanding: { formatINR(s.Outstanding) }</div>
+			<div>Foreclosure fee { ratePctStr(s.FeePctNow) }%: { formatINR(s.FeeNow) }</div>
+			<div>GST 18% on fee: { formatINR(s.GstNow) }</div>
+			<div>Exit cost: { formatINR(s.TotalNow) }</div>
+		</div>
+		if s.HasStrategy {
+			<div class="card">
+				<h3>{ s.Title }</h3>
+				for _, row := range s.Rows {
+					<div>{ row.Label }: { row.Value }</div>
+				}
+				<div>Exit cost: { formatINR(s.TotalStrategy) }</div>
+			</div>
+			if s.SaveAmount >= 0 {
+				<div class="save-banner">Net saving vs foreclosing today: { formatINR(s.SaveAmount) }</div>
+			} else {
+				<div class="save-banner-negative">This strategy costs more than foreclosing today: { formatINR(-1 * s.SaveAmount) } extra</div>
+			}
+		} else {
+			<div class="card">No verified escape route in the exit-clause matrix for this lender.</div>
+		}
+	</div>
+}
+
+templ CalcResponse(stats StatsData, results []LenderResult, strategy loancalc.StrategyResult) {
 	@Stats(stats)
 	@Leaderboard(results)
+	@StrategyPanel(strategy)
 }
