@@ -66,7 +66,9 @@ func computeStrategyResult(amount, rate float64, tenure, exit, lenderIdx int) lo
 }
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.SetTrustedProxies(nil)
 	r.Static("/static", "./static")
 
 	r.GET("/", func(c *gin.Context) {
