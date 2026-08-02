@@ -1,0 +1,72 @@
+package templates
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>{ title }</title>
+		<script src="/static/htmx.min.js"></script>
+	</head>
+	<body>
+		{ children... }
+		<script>
+			document.getElementById('debug').textContent = 'loaded, htmx defined: ' + (typeof window.htmx !== 'undefined');
+			document.body.addEventListener('htmx:beforeRequest', function(e){
+				document.getElementById('debug').textContent = 'beforeRequest fired';
+			});
+			document.body.addEventListener('htmx:afterRequest', function(e){
+				document.getElementById('debug').textContent = 'afterRequest, status=' + e.detail.xhr.status;
+			});
+			document.body.addEventListener('htmx:responseError', function(e){
+				document.getElementById('debug').textContent = 'responseError, status=' + e.detail.xhr.status;
+			});
+			document.body.addEventListener('htmx:sendError', function(e){
+				document.getElementById('debug').textContent = 'sendError - network/connection issue';
+			});
+		</script>
+	</body>
+	</html>
+}
+
+templ Index(stats StatsData) {
+	@Layout("LoanExitIQ") {
+		<h1>LoanExitIQ</h1>
+		<div id="controls">
+			<label>
+				Loan amount (Rs)
+				<input type="range" name="amount" min="5000000" max="100000000" step="500000" value="30000000"
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+			</label>
+			<label>
+				Interest rate (% p.a.)
+				<input type="range" name="rate" min="8" max="14" step="0.05" value="10.5"
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+			</label>
+			<label>
+				Tenure (months)
+				<input type="range" name="tenure" min="24" max="240" step="6" value="60"
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+			</label>
+			<label>
+				Exit month
+				<input type="range" name="exit" min="3" max="230" step="1" value="18"
+					hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#controls"/>
+			</label>
+		</div>
+		<div id="debug" style="color:red;font-weight:bold">JS not running</div>
+		<div id="stats">
+			@Stats(stats)
+		</div>
+	}
+}
+
+templ Stats(s StatsData) {
+	<div class="stats">
+		<div>EMI: { formatINR(s.EMI) }</div>
+		<div>Interest paid so far: { formatINR(s.InterestPaid) }</div>
+		<div>Principal cleared: { formatINR(s.PrincipalPaid) }</div>
+		<div>Outstanding at month { itoa(s.ExitMonth) } of { itoa(s.Tenure) }: { formatINR(s.Outstanding) }</div>
+	</div>
+}
