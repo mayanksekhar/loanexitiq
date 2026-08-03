@@ -9,6 +9,7 @@ templ Layout(title string) {
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>{ title }</title>
+		<link rel="stylesheet" href="/static/fonts.css"/>
 		<link rel="stylesheet" href="/static/style.css"/>
 		<script src="/static/htmx.min.js"></script>
 	</head>
@@ -47,33 +48,33 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 					<span id="vAmt" class="val">Rs 3.00 Cr</span>
 					<input type="range" name="amount" min="5000000" max="100000000" step="500000" value="30000000"
 						oninput="document.getElementById('vAmt').textContent=fmtINR(this.value)"
-						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
+						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
 				<label>
 					Interest rate (% p.a.)
 					<span id="vRate" class="val">10.50%</span>
 					<input type="range" name="rate" min="8" max="14" step="0.05" value="10.5"
 						oninput="document.getElementById('vRate').textContent=Number(this.value).toFixed(2)+'%'"
-						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
+						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
 				<label>
 					Tenure (months)
 					<span id="vTen" class="val">60 months</span>
 					<input type="range" name="tenure" min="24" max="240" step="6" value="60"
 						oninput="document.getElementById('vTen').textContent=this.value+' months'"
-						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
+						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
 				<label>
 					Exit month
 					<span id="vExit" class="val">18</span>
 					<input type="range" name="exit" min="3" max="230" step="1" value="18"
 						oninput="document.getElementById('vExit').textContent=this.value"
-						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#allInputs"/>
+						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
 				<label>
 					Exit strategy lender
 					<span class="val">&nbsp;</span>
-					<select name="lender" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#allInputs">
+					<select name="lender" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#calcTab">
 						for i, l := range loancalc.StrategyLenders {
 							<option value={ itoa(i) }>{ l.Name }</option>
 						}
@@ -107,9 +108,13 @@ templ BankCost(b LenderResult) {
 		<div class="bank-picker">
 			<label>
 				Bank
-				<select name="bank" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#allInputs">
+				<select name="bank" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#calcTab">
 					for i, l := range loancalc.Lenders {
-						<option value={ itoa(i) }>{ l.Name }</option>
+						if i == b.SelectedIdx {
+							<option value={ itoa(i) } selected>{ l.Name }</option>
+						} else {
+							<option value={ itoa(i) }>{ l.Name }</option>
+						}
 					}
 				</select>
 			</label>

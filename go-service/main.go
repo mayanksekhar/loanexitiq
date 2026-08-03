@@ -53,6 +53,7 @@ func computeBankCost(amount, rate float64, tenure, exit, bankIdx int) templates.
 		InterestPaid: r.InterestPaid,
 		Fee:          r.Fee,
 		FeePct:       r.FeePct,
+		SelectedIdx:  bankIdx,
 		Total:        r.Total,
 	}
 }

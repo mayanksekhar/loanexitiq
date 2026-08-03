@@ -57,6 +57,7 @@ type LenderResult struct {
 	InterestPaid float64
 	Fee          float64
 	FeePct       float64
+	SelectedIdx  int
 	Total        float64
 	IsBest       bool
 	IsWorst      bool
