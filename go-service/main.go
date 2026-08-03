@@ -58,6 +58,11 @@ func computeBankCost(amount, rate float64, tenure, exit, bankIdx int) templates.
 	}
 }
 
+func computeChart(amount, rate float64, tenure, exit int) loancalc.ChartData {
+	exit = clampExit(tenure, exit)
+	return loancalc.BuildChart(amount, rate, tenure, exit)
+}
+
 func computeStrategyResult(amount, rate float64, tenure, exit, lenderIdx int) loancalc.StrategyResult {
 	exit = clampExit(tenure, exit)
 	if lenderIdx < 0 || lenderIdx >= len(loancalc.Lenders) {
@@ -75,8 +80,9 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		stats := computeStats(30000000, 10.5, 60, 18)
 		bank := computeBankCost(30000000, 10.5, 60, 18, 0)
+		chart := computeChart(30000000, 10.5, 60, 18)
 		strategy := computeStrategyResult(30000000, 10.5, 60, 18, 0)
-		templ.Handler(templates.Index(stats, bank, strategy)).ServeHTTP(c.Writer, c.Request)
+		templ.Handler(templates.Index(stats, bank, strategy, chart)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.POST("/calculate", func(c *gin.Context) {
@@ -88,8 +94,9 @@ func main() {
 
 		stats := computeStats(amount, rate, tenure, exit)
 		bank := computeBankCost(amount, rate, tenure, exit, bankIdx)
+		chart := computeChart(amount, rate, tenure, exit)
 		strategy := computeStrategyResult(amount, rate, tenure, exit, bankIdx)
-		templ.Handler(templates.CalcResponse(stats, bank, strategy)).ServeHTTP(c.Writer, c.Request)
+		templ.Handler(templates.CalcResponse(stats, bank, strategy, chart)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.Run(":8080")

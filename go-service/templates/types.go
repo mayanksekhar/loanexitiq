@@ -80,3 +80,21 @@ func donutSlice(part, total float64) string {
 }
 
 // note: LenderResult.FeePct added for single-bank view
+
+func f2(v float64) string {
+	return strconv.FormatFloat(v, 'f', 2, 64)
+}
+
+func formatINRf(n float64) string {
+	return formatINR(n)
+}
+
+func calloutLead(month int, paid, cleared float64) string {
+	return "By month " + strconv.Itoa(month) + " you have paid " + formatINR(paid) +
+		". Only " + formatINR(cleared) + " of that reduced what you owe."
+}
+
+func calloutSub(pct int, outstanding, loan float64) string {
+	return strconv.Itoa(pct) + "% went to interest, and you still owe " +
+		formatINR(outstanding) + " of the original " + formatINR(loan) + "."
+}

@@ -34,7 +34,7 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult) {
+templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData) {
 	@Layout("LoanExitIQ") {
 		<h1>LoanExitIQ</h1>
 		<div class="tabs">
@@ -75,6 +75,7 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 			<div id="stats">
 				@Stats(stats)
 			</div>
+			@EmiChart(chart)
 			@BankCost(bank)
 			@StrategyPanel(strategy)
 		</div>
@@ -194,9 +195,39 @@ templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
 	</div>
 }
 
-templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult) {
+templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData) {
 	@Stats(stats)
+	@EmiChart(chart)
 	@BankCost(bank)
 	@StrategyPanel(strategy)
 	@ComparisonPies(stats, strategy)
+}
+
+templ EmiChart(c loancalc.ChartData) {
+	<div id="emiChart" hx-swap-oob="true">
+		<h2>Where every EMI actually goes</h2>
+		<div class="h2sub">Each bar is one monthly EMI, split into what the bank keeps as interest and what actually reduces what you owe. Early on, most of your money is interest. The gold line marks your exit month, everything past it is money you never end up paying.</div>
+		<svg viewBox={ "0 0 " + f2(c.Width) + " " + f2(c.Height) } preserveAspectRatio="none" class="emi-svg">
+			for _, b := range c.Bars {
+				if b.Dimmed {
+					<rect x={ f2(b.X) } y={ f2(b.PrincipalY) } width={ f2(b.Width) } height={ f2(b.PrincipalH) } fill="#58C99B" opacity="0.22"></rect>
+					<rect x={ f2(b.X) } y={ f2(b.InterestY) } width={ f2(b.Width) } height={ f2(b.InterestH) } fill="#FF6B5E" opacity="0.22"></rect>
+				} else {
+					<rect x={ f2(b.X) } y={ f2(b.PrincipalY) } width={ f2(b.Width) } height={ f2(b.PrincipalH) } fill="#58C99B"></rect>
+					<rect x={ f2(b.X) } y={ f2(b.InterestY) } width={ f2(b.Width) } height={ f2(b.InterestH) } fill="#FF6B5E"></rect>
+				}
+			}
+			<line x1={ f2(c.MarkerX) } y1="8" x2={ f2(c.MarkerX) } y2={ f2(c.Height - 8) } stroke="#E9B44C" stroke-width="2" stroke-dasharray="5 4"></line>
+			<text x={ f2(c.MarkerLabelX) } y="22" fill="#E9B44C" font-size="15" font-family="IBM Plex Mono, monospace">exit · m{ itoa(c.ExitMonth) }</text>
+		</svg>
+		<div class="legend">
+			<span><i class="dot" style="background:#FF6B5E"></i> Interest (money the bank keeps)</span>
+			<span><i class="dot" style="background:#58C99B"></i> Principal (reduces what you owe)</span>
+			<span><i class="dot" style="background:#E9B44C"></i> Your exit month</span>
+		</div>
+		<div class="chart-callout">
+			<span class="callout-lead">{ calloutLead(c.ExitMonth, c.TotalPaid, c.PrincipalCleared) }</span>
+			<span class="callout-sub">{ calloutSub(c.IntPctAtExit, c.Outstanding, c.LoanAmount) }</span>
+		</div>
+	</div>
 }
