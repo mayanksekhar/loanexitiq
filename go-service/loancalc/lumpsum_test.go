@@ -8,7 +8,6 @@ import (
 // Figures below were verified independently before being asserted here.
 func TestLumpsumBuilderCase(t *testing.T) {
 	// 3 Cr, 10.5%, 60mo, at month 21, part-paying 25% of outstanding.
-	// ICICI LAP is index 0 with DRate 0 so rate stays 10.5%.
 	outstanding := 21228325.0
 	lump := outstanding * 0.25
 

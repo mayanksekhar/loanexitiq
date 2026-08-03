@@ -26,7 +26,7 @@ type StrategyResult struct {
 func ComputeStrategy(P, rate float64, tenure, exit int, isFirm bool, lenderIdx int) StrategyResult {
 	l := Lenders[lenderIdx]
 	s := l.Strategy
-	rate2 := rate + l.DRate
+	rate2 := rate
 	r := rate2 / 1200
 	_, rows := Schedule(P, rate2, tenure)
 	bal := rows[exit-1].Balance

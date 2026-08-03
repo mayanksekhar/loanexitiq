@@ -73,7 +73,7 @@ func simulate(bal, annualRate, instalment float64) (months int, totalInterest fl
 // a borrower can take afterwards.
 func ComputeLumpsum(P, rate float64, tenure, currentMonth int, lump float64, lenderIdx int) LumpsumResult {
 	l := Lenders[lenderIdx]
-	rate2 := rate + l.DRate
+	rate2 := rate
 
 	e, rows := Schedule(P, rate2, tenure)
 	bal := rows[currentMonth-1].Balance

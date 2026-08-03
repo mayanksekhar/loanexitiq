@@ -119,7 +119,8 @@ templ BankCost(b LenderResult) {
 		</div>
 		<div class="bank-total countup" data-value={ f2(b.Total) }>{ formatINR(b.Total) }</div>
 		<div class="bank-detail">
-			<div>Interest rate: { ratePctStr(b.RatePct) }% p.a. (assumed)</div>
+			<div>Interest rate: { ratePctStr(b.RatePct) }% p.a. (as entered above)</div>
+			<div>Outstanding at this exit month: { formatINR(b.Outstanding) }</div>
 			<div>Foreclosure fee at this exit month: { ratePctStr(b.FeePct) }%</div>
 			<div>Interest paid over holding period: { formatINR(b.InterestPaid) }</div>
 			<div>Foreclosure fee + GST: { formatINR(b.Fee) }</div>

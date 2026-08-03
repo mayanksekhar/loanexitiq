@@ -5,7 +5,7 @@ import "testing"
 func setup(idx, month int, lumpPct float64) (Lender, StrategyResult, LumpsumResult) {
 	l := Lenders[idx]
 	s := ComputeStrategy(3e7, 10.5, 60, month, true, idx)
-	_, rows := Schedule(3e7, 10.5+l.DRate, 60)
+	_, rows := Schedule(3e7, 10.5, 60)
 	bal := rows[month-1].Balance
 	lp := ComputeLumpsum(3e7, 10.5, 60, month, bal*lumpPct/100, idx)
 	return l, s, lp

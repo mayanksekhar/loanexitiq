@@ -47,7 +47,6 @@ type Strategy struct {
 type Lender struct {
 	Name     string
 	Note     string
-	DRate    float64
 	FeeTiers []FeeTier
 	Strategy Strategy
 }
@@ -61,7 +60,7 @@ func (l Lender) FeeAt(exitMonth int) float64 {
 // See docs/SOURCES.md.
 var Lenders = []Lender{
 	{
-		Name: "ICICI LAP", Note: "4% non-individual, part-pay free, 12mo clawback", DRate: 0,
+		Name: "ICICI LAP", Note: "4% non-individual, part-pay free, 12mo clawback",
 		FeeTiers: []FeeTier{{0, 4}},
 		Strategy: Strategy{
 			Type: StrategyStub, Title: "Stub strategy: defuse the clawback",
@@ -70,7 +69,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "Kotak business", Note: "4% fixed rate, unsecured business loan", DRate: 0,
+		Name: "Kotak business", Note: "4% fixed rate, unsecured business loan",
 		FeeTiers: []FeeTier{{0, 4}},
 		Strategy: Strategy{
 			Type: StrategyStub, Title: "Stub strategy: defuse the 12-month clawback",
@@ -79,7 +78,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "HDFC LAP", Note: "up to 2.5% business use, 25%/yr part-pay free, MSME waiver", DRate: -0.1,
+		Name: "HDFC LAP", Note: "up to 2.5% business use, 25%/yr part-pay free, MSME waiver",
 		FeeTiers: []FeeTier{{0, 2.5}},
 		Strategy: Strategy{
 			Type: StrategyStaggered, Title: "Annual 25% part-pay ladder",
@@ -90,7 +89,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "SBI term loan", Note: "3% only within 24mo of disbursement, free after", DRate: -0.2,
+		Name: "SBI term loan", Note: "3% only within 24mo of disbursement, free after",
 		FeeTiers: []FeeTier{{24, 3}, {0, 0}},
 		Strategy: Strategy{
 			Type: StrategySeasoning, Title: "Wait out the 24-month window",
@@ -99,7 +98,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "Axis LAP", Note: "3%, but 25%/quarter part-pay free (not in Q1)", DRate: 0.1,
+		Name: "Axis LAP", Note: "3%, but 25%/quarter part-pay free (not in Q1)",
 		FeeTiers: []FeeTier{{0, 3}},
 		Strategy: Strategy{
 			Type: StrategyStaggered, Title: "Quarterly 25% part-pay ladder",
@@ -111,7 +110,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "AU Small Finance Bank", Note: "5% within 12mo, 4% after, no part-pay allowed", DRate: 2.0,
+		Name: "AU Small Finance Bank", Note: "5% within 12mo, 4% after, no part-pay allowed",
 		FeeTiers: []FeeTier{{12, 5}, {0, 4}},
 		Strategy: Strategy{
 			Type: StrategyNone, Title: "No escape route: part-prepayment not allowed",
@@ -119,7 +118,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "Canara Bank LAP", Note: "nil prepayment and foreclosure charges (floating rate)", DRate: -0.15,
+		Name: "Canara Bank LAP", Note: "nil prepayment and foreclosure charges (floating rate)",
 		FeeTiers: []FeeTier{{0, 0}},
 		Strategy: Strategy{
 			Type: StrategyZeroFee, Title: "Already fee-free",
@@ -127,7 +126,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "Indian Bank LAP", Note: "nil prepayment and foreclosure charges (floating rate)", DRate: -0.1,
+		Name: "Indian Bank LAP", Note: "nil prepayment and foreclosure charges (floating rate)",
 		FeeTiers: []FeeTier{{0, 0}},
 		Strategy: Strategy{
 			Type: StrategyZeroFee, Title: "Already fee-free",
@@ -135,7 +134,7 @@ var Lenders = []Lender{
 		},
 	},
 	{
-		Name: "ICICI Instalment (MSME)", Note: "different product, seasoning waiver", DRate: 0.2,
+		Name: "ICICI Instalment (MSME)", Note: "different product, seasoning waiver",
 		FeeTiers: []FeeTier{{0, 4}},
 		Strategy: Strategy{
 			Type: StrategySeasoning, Title: "MSME waiver or 24-month seasoning",
@@ -152,6 +151,7 @@ type LenderResult struct {
 	InterestPaid float64
 	Fee          float64
 	FeePct       float64
+	Outstanding  float64
 	SelectedIdx  int
 	Total        float64
 	IsBest       bool
@@ -161,7 +161,7 @@ type LenderResult struct {
 // ComputeForLender returns the full cost breakdown for a single lender by index.
 func ComputeForLender(P, rate float64, tenure, exit int, isFirm bool, lenderIdx int) LenderResult {
 	l := Lenders[lenderIdx]
-	r2 := rate + l.DRate
+	r2 := rate
 	_, rows := Schedule(P, r2, tenure)
 	bal := rows[exit-1].Balance
 
@@ -183,6 +183,7 @@ func ComputeForLender(P, rate float64, tenure, exit int, isFirm bool, lenderIdx 
 		InterestPaid: interestPaid,
 		Fee:          fee,
 		FeePct:       feePct,
+		Outstanding:  bal,
 		Total:        interestPaid + fee,
 	}
 }

@@ -53,6 +53,7 @@ func computeBankCost(amount, rate float64, tenure, exit, bankIdx int) templates.
 		InterestPaid: r.InterestPaid,
 		Fee:          r.Fee,
 		FeePct:       r.FeePct,
+		Outstanding:  r.Outstanding,
 		SelectedIdx:  bankIdx,
 		Total:        r.Total,
 	}
@@ -82,7 +83,7 @@ func computeLumpsum(amount, rate float64, tenure, exit, lumpPct, bankIdx int) lo
 	if lumpPct > 100 {
 		lumpPct = 100
 	}
-	_, rows := loancalc.Schedule(amount, rate+loancalc.Lenders[bankIdx].DRate, tenure)
+	_, rows := loancalc.Schedule(amount, rate, tenure)
 	bal := rows[exit-1].Balance
 	return loancalc.ComputeLumpsum(amount, rate, tenure, exit, bal*float64(lumpPct)/100, bankIdx)
 }

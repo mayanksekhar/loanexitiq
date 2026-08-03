@@ -71,7 +71,7 @@ func BuildChart(P, rate float64, tenure, exit int) ChartData {
 
 	pct := 0
 	if totalPaid > 0 {
-		pct = int((totalInt / totalPaid) * 100)
+		pct = int((totalInt/totalPaid)*100 + 0.5)
 	}
 
 	var outstanding float64
