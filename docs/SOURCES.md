@@ -79,3 +79,24 @@ figure from the generated text and reject the response if any number is absent
 from the facts passed in, falling back to the deterministic recommendation text.
 The model may rephrase, never compute. Tagline references to AI should be
 treated as pending that work.
+
+## Deferred: per-lender rate cards and true bank comparison
+
+The app currently applies one interest rate, the one the borrower enters, to
+every lender. That is mathematically correct, since a reducing-balance loan
+amortizes identically regardless of which bank issued it. Only the fee and
+clause data varies by lender, and that data is sourced.
+
+An earlier build carried per-lender rate offsets that shifted the borrower's
+stated rate up or down by lender. Those offsets were never sourced, and they
+caused the same quantity to print with two different values on one page. They
+were removed. Nothing should reintroduce a rate adjustment that is not backed
+by a published rate card.
+
+The genuine version of this feature, per Section 3 of the project brief, is to
+source real per-lender rate cards and repo-linked benchmark history, then run
+two scenarios side by side: the borrower's actual loan, and the same loan
+priced at another lender's published rate. That turns the bank selector into a
+real "which lender would have been cheaper to hold and to exit" comparison
+rather than a fee-only switch. It requires sourced rate data before any of it
+can be shown to a borrower.
