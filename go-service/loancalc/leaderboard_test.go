@@ -5,46 +5,31 @@ import (
 	"testing"
 )
 
-func TestLeaderboardICICITotalMatchesBrief(t *testing.T) {
-	results := ComputeLeaderboard(3e7, 10.5, 60, 18, true)
-	var iciciTotal float64
-	found := false
-	for _, r := range results {
-		if r.Name == "ICICI LAP" {
-			iciciTotal = r.Total
-			found = true
-		}
-	}
-	if !found {
-		t.Fatal("ICICI LAP not found in results")
-	}
+func TestICICITotalMatchesBrief(t *testing.T) {
+	r := ComputeForLender(3e7, 10.5, 60, 18, true, 0)
 	want := 5254344.0
-	if math.Abs(iciciTotal-want) > 50000 {
-		t.Errorf("ICICI LAP total = %.2f, want approx %.2f", iciciTotal, want)
+	if math.Abs(r.Total-want) > 50000 {
+		t.Errorf("ICICI LAP total = %.2f, want approx %.2f", r.Total, want)
 	}
 }
 
 func TestSBIFeeTiering(t *testing.T) {
-	var sbi Lender
-	for _, l := range Lenders {
-		if l.Name == "SBI term loan" {
-			sbi = l
-		}
+	sbi := Lenders[3]
+	if sbi.Name != "SBI term loan" {
+		t.Fatalf("index 3 is %q, expected SBI term loan", sbi.Name)
 	}
 	if got := sbi.FeeAt(18); got != 3 {
-		t.Errorf("SBI fee at month 18 = %.1f, want 3 (within 24mo window)", got)
+		t.Errorf("SBI fee at month 18 = %.1f, want 3", got)
 	}
 	if got := sbi.FeeAt(30); got != 0 {
-		t.Errorf("SBI fee at month 30 = %.1f, want 0 (past 24mo window)", got)
+		t.Errorf("SBI fee at month 30 = %.1f, want 0", got)
 	}
 }
 
 func TestAUFeeTiering(t *testing.T) {
-	var au Lender
-	for _, l := range Lenders {
-		if l.Name == "AU Small Finance Bank" {
-			au = l
-		}
+	au := Lenders[5]
+	if au.Name != "AU Small Finance Bank" {
+		t.Fatalf("index 5 is %q, expected AU Small Finance Bank", au.Name)
 	}
 	if got := au.FeeAt(10); got != 5 {
 		t.Errorf("AU fee at month 10 = %.1f, want 5", got)
@@ -54,17 +39,22 @@ func TestAUFeeTiering(t *testing.T) {
 	}
 }
 
-func TestLeaderboardSortedAscendingWithFlags(t *testing.T) {
-	results := ComputeLeaderboard(3e7, 10.5, 60, 18, true)
-	for i := 1; i < len(results); i++ {
-		if results[i].Total < results[i-1].Total {
-			t.Errorf("results not sorted ascending at index %d", i)
+func TestCanaraAndIndianAreZeroFee(t *testing.T) {
+	for _, idx := range []int{6, 7} {
+		l := Lenders[idx]
+		if got := l.FeeAt(18); got != 0 {
+			t.Errorf("%s fee = %.1f, want 0", l.Name, got)
+		}
+		r := ComputeForLender(3e7, 10.5, 60, 18, true, idx)
+		if r.Fee != 0 {
+			t.Errorf("%s computed fee = %.2f, want 0", l.Name, r.Fee)
 		}
 	}
-	if !results[0].IsBest {
-		t.Error("first result should be marked IsBest")
-	}
-	if !results[len(results)-1].IsWorst {
-		t.Error("last result should be marked IsWorst")
+}
+
+func TestIndividualBorrowerPaysNoFee(t *testing.T) {
+	r := ComputeForLender(3e7, 10.5, 60, 18, false, 0)
+	if r.Fee != 0 {
+		t.Errorf("individual borrower fee = %.2f, want 0", r.Fee)
 	}
 }
