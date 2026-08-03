@@ -98,3 +98,33 @@ func calloutSub(pct int, outstanding, loan float64) string {
 	return strconv.Itoa(pct) + "% went to interest, and you still owe " +
 		formatINR(outstanding) + " of the original " + formatINR(loan) + "."
 }
+
+func lumpHeadline(adv float64) string {
+	if adv <= 0 {
+		return "Both routes cost about the same here."
+	}
+	return "Keeping your EMI the same and finishing sooner saves " + formatINR(adv) + " more than lowering your EMI, for the exact same part-payment."
+}
+
+func lumpFreeNote(lender string, pct, allowance, lump float64, isFree bool) string {
+	if pct == 0 {
+		return lender + " does not allow free part-payment at this point, so any lumpsum here may attract a charge. Check your sanction letter."
+	}
+	base := lender + " allows up to " + formatINR(allowance) + " of part-payment with no charge right now."
+	if isFree {
+		return base + " Your " + formatINR(lump) + " is within that, so it costs nothing to pay."
+	}
+	return base + " Your " + formatINR(lump) + " goes past that, so the excess may attract a fee."
+}
+
+func lumpMonthsLine(months int) string {
+	return strconv.Itoa(months) + " months left"
+}
+
+func lumpSavedLine(saved float64) string {
+	return "Interest saved: " + formatINR(saved)
+}
+
+func lumpFinishLine(months, saved int) string {
+	return strconv.Itoa(months) + " months left, " + strconv.Itoa(saved) + " months sooner"
+}

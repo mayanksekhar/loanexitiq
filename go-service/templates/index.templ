@@ -34,7 +34,7 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData) {
+templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult) {
 	@Layout("LoanExitIQ") {
 		<h1>LoanExitIQ</h1>
 		<div class="tabs">
@@ -71,12 +71,20 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 						oninput="document.getElementById('vExit').textContent=this.value"
 						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
+				<label>
+					Lumpsum you can pay
+					<span id="vLump" class="val">25% of balance</span>
+					<input type="range" name="lumppct" min="0" max="100" step="5" value="25"
+						oninput="document.getElementById(String.fromCharCode(118,76,117,109,112)).textContent=this.value+String.fromCharCode(37)+String.fromCharCode(32)+String.fromCharCode(111,102)+String.fromCharCode(32)+String.fromCharCode(98,97,108,97,110,99,101)"
+						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
+				</label>
 			</div>
 			<div id="stats">
 				@Stats(stats)
 			</div>
 			@EmiChart(chart)
 			@BankCost(bank)
+			@LumpsumPanel(lump, bank.Name)
 			@StrategyPanel(strategy)
 		</div>
 		<div id="suggestionTabWrapper" class="tab-panel" style="display:none">
@@ -195,10 +203,11 @@ templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
 	</div>
 }
 
-templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData) {
+templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult) {
 	@Stats(stats)
 	@EmiChart(chart)
 	@BankCost(bank)
+	@LumpsumPanel(lump, bank.Name)
 	@StrategyPanel(strategy)
 	@ComparisonPies(stats, strategy)
 }
@@ -229,5 +238,41 @@ templ EmiChart(c loancalc.ChartData) {
 			<span class="callout-lead">{ calloutLead(c.ExitMonth, c.TotalPaid, c.PrincipalCleared) }</span>
 			<span class="callout-sub">{ calloutSub(c.IntPctAtExit, c.Outstanding, c.LoanAmount) }</span>
 		</div>
+	</div>
+}
+
+templ LumpsumPanel(r loancalc.LumpsumResult, lenderName string) {
+	<div id="lumpsumPanel" hx-swap-oob="true">
+		<h2>What a lumpsum payment would do</h2>
+		<div class="h2sub">If you have spare money today, paying it against the principal changes what happens next. Banks usually offer two choices, and they are not worth the same.</div>
+		<div class="lump-note">{ lumpFreeNote(lenderName, r.FreePct, r.FreeAllowance, r.Lumpsum, r.LumpsumIsFree) }</div>
+		<div class="duel duel-3">
+			<div class="card">
+				<h3>Do nothing</h3>
+				<div class="row"><span>Your EMI</span><b>{ formatINR(r.Baseline.EMI) }</b></div>
+				<div class="row"><span>Time left</span><b>{ lumpMonthsLine(r.Baseline.Months) }</b></div>
+				<div class="row"><span>Interest still to pay</span><b>{ formatINR(r.Baseline.TotalInterest) }</b></div>
+				<div class="lump-explain">You carry on exactly as you are. This is the comparison point.</div>
+			</div>
+			<div class="card">
+				<h3>Pay lumpsum, reduce your EMI</h3>
+				<div class="row"><span>New EMI</span><b>{ formatINR(r.ReduceEMI.EMI) }</b></div>
+				<div class="row"><span>Monthly saving</span><b>{ formatINR(r.ReduceEMI.EMIReduction) }</b></div>
+				<div class="row"><span>Time left</span><b>{ lumpMonthsLine(r.ReduceEMI.Months) }</b></div>
+				<div class="total"><span>Interest saved</span><span>{ formatINR(r.ReduceEMI.InterestSaved) }</span></div>
+				<div class="lump-explain">Your monthly payment drops, but the loan still runs to the same end date. Easier on cash flow each month.</div>
+			</div>
+			<div class="card win">
+				<h3>Pay lumpsum, finish sooner</h3>
+				<div class="row"><span>EMI</span><b>{ formatINR(r.ReduceTenure.EMI) }</b></div>
+				<div class="row"><span>Monthly saving</span><b>Nothing, EMI stays</b></div>
+				<div class="row"><span>Time left</span><b>{ lumpFinishLine(r.ReduceTenure.Months, r.ReduceTenure.MonthsSaved) }</b></div>
+				<div class="total"><span>Interest saved</span><span>{ formatINR(r.ReduceTenure.InterestSaved) }</span></div>
+				<div class="lump-explain">You keep paying the same amount, but the loan ends earlier. You stop paying interest sooner, which is why this saves more.</div>
+			</div>
+		</div>
+		if r.TenureAdvantage > 0 {
+			<div class="save-banner">{ lumpHeadline(r.TenureAdvantage) }</div>
+		}
 	</div>
 }

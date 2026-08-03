@@ -71,6 +71,22 @@ func computeStrategyResult(amount, rate float64, tenure, exit, lenderIdx int) lo
 	return loancalc.ComputeStrategy(amount, rate, tenure, exit, true, lenderIdx)
 }
 
+func computeLumpsum(amount, rate float64, tenure, exit, lumpPct, bankIdx int) loancalc.LumpsumResult {
+	exit = clampExit(tenure, exit)
+	if bankIdx < 0 || bankIdx >= len(loancalc.Lenders) {
+		bankIdx = 0
+	}
+	if lumpPct < 0 {
+		lumpPct = 0
+	}
+	if lumpPct > 100 {
+		lumpPct = 100
+	}
+	_, rows := loancalc.Schedule(amount, rate+loancalc.Lenders[bankIdx].DRate, tenure)
+	bal := rows[exit-1].Balance
+	return loancalc.ComputeLumpsum(amount, rate, tenure, exit, bal*float64(lumpPct)/100, bankIdx)
+}
+
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -81,8 +97,9 @@ func main() {
 		stats := computeStats(30000000, 10.5, 60, 18)
 		bank := computeBankCost(30000000, 10.5, 60, 18, 0)
 		chart := computeChart(30000000, 10.5, 60, 18)
+		lump := computeLumpsum(30000000, 10.5, 60, 18, 25, 0)
 		strategy := computeStrategyResult(30000000, 10.5, 60, 18, 0)
-		templ.Handler(templates.Index(stats, bank, strategy, chart)).ServeHTTP(c.Writer, c.Request)
+		templ.Handler(templates.Index(stats, bank, strategy, chart, lump)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.POST("/calculate", func(c *gin.Context) {
@@ -94,9 +111,11 @@ func main() {
 
 		stats := computeStats(amount, rate, tenure, exit)
 		bank := computeBankCost(amount, rate, tenure, exit, bankIdx)
+		lumpPct, _ := strconv.Atoi(c.PostForm("lumppct"))
 		chart := computeChart(amount, rate, tenure, exit)
+		lump := computeLumpsum(amount, rate, tenure, exit, lumpPct, bankIdx)
 		strategy := computeStrategyResult(amount, rate, tenure, exit, bankIdx)
-		templ.Handler(templates.CalcResponse(stats, bank, strategy, chart)).ServeHTTP(c.Writer, c.Request)
+		templ.Handler(templates.CalcResponse(stats, bank, strategy, chart, lump)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.Run(":8080")
