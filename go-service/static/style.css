@@ -206,3 +206,27 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
   .save-banner::before, .rec-action::before { animation: none; }
   .card { transition: none; }
 }
+
+/* deterministic tab geometry: identical box regardless of label length */
+.tabs { display: flex; align-items: stretch; gap: 8px; margin: 22px 0 18px; padding: 0; }
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 20px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  vertical-align: top;
+  box-sizing: border-box;
+  cursor: pointer;
+  background: var(--panel);
+  color: var(--muted);
+}
+.tab-btn.active { background: var(--panel2); color: var(--gold); border-color: var(--gold); }
