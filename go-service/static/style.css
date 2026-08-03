@@ -247,3 +247,19 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
 .cost-fee { color: var(--gold); }
 .cost-sub { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
 .owed-line { font-weight: 600; color: var(--text); border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 6px; }
+
+.cheque-hero { background: linear-gradient(120deg,#1A2230,#141C28); border: 1px solid var(--gold); border-radius: var(--radius); padding: 24px; margin-bottom: 18px; }
+.cheque-label { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.cheque-value { font-family: 'IBM Plex Mono', monospace; font-size: 44px; font-weight: 700; color: var(--gold); line-height: 1.05; }
+.cheque-sub { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+.plan { list-style: none; counter-reset: none; margin: 0 0 18px; padding: 0; }
+.plan-step { display: grid; grid-template-columns: 40px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--panel2); }
+.plan-step:last-child { border-bottom: none; }
+.plan-num { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--gold); color: var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 15px; }
+.plan-when { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.plan-action { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.plan-why { font-size: 13px; color: var(--muted); line-height: 1.55; max-width: 720px; }
+.plan-aside { background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-top: 18px; font-size: 14px; line-height: 1.6; }
+.plan-aside-head { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.plan-aside-sub { font-size: 13px; color: var(--muted); margin-top: 8px; }

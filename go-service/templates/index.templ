@@ -65,13 +65,6 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 						oninput="document.getElementById('vExit').textContent=this.value"
 						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
-				<label>
-					Lumpsum you can pay
-					<span id="vLump" class="val">25% of balance</span>
-					<input type="range" name="lumppct" min="0" max="100" step="5" value="25"
-						oninput="document.getElementById(String.fromCharCode(118,76,117,109,112)).textContent=this.value+String.fromCharCode(37)+String.fromCharCode(32)+String.fromCharCode(111,102)+String.fromCharCode(32)+String.fromCharCode(98,97,108,97,110,99,101)"
-						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
-				</label>
 			</div>
 			<div id="stats">
 				@Stats(stats)
@@ -82,7 +75,7 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 		<div id="suggestionTabWrapper" class="tab-panel" style="display:none">
 			@RecommendBanner(rec)
 			@ComparisonPies(stats, strategy)
-			@LumpsumPanel(lump, bank.Name)
+			@ExitPlan(strategy, lump, bank.Name)
 			@StrategyPanel(strategy)
 		</div>
 		<footer>
@@ -117,6 +110,11 @@ templ BankCost(b LenderResult) {
 				</select>
 			</label>
 		</div>
+		<div class="cheque-hero">
+			<div class="cheque-label">To close this loan today you pay</div>
+			<div class="cheque-value countup" data-value={ f2(b.ChequeToday) }>{ formatINR(b.ChequeToday) }</div>
+			<div class="cheque-sub">{ chequeBreakdown(b.Outstanding, b.Fee) }</div>
+		</div>
 		<div class="cost-split">
 			<div class="cost-block">
 				<div class="cost-label">Interest already paid</div>
@@ -134,11 +132,41 @@ templ BankCost(b LenderResult) {
 			</div>
 		</div>
 		<div class="bank-detail">
-			<div class="owed-line">{ outstandingLine(b.Outstanding) }</div>
 			<div>Interest rate: { ratePctStr(b.RatePct) }% p.a. (as entered above)</div>
 			<div>{ totalExitLine(b.Total) }</div>
 			<div class="bank-note">{ b.Note }</div>
 		</div>
+	</div>
+}
+
+templ ExitPlan(s loancalc.StrategyResult, lp loancalc.LumpsumResult, lenderName string) {
+	<div id="lumpsumPanel" hx-swap-oob="true">
+		<h2>Your exit plan</h2>
+		<div class="h2sub">Built from { lenderName }'s own published terms. Each step says what to pay, when, and which clause makes it work.</div>
+		<ol class="plan">
+			for i, st := range s.Steps {
+				<li class="plan-step">
+					<div class="plan-num">{ itoa(i + 1) }</div>
+					<div class="plan-body">
+						<div class="plan-when">{ st.When }</div>
+						<div class="plan-action">{ st.Action }</div>
+						<div class="plan-why">{ st.Why }</div>
+					</div>
+				</li>
+			}
+		</ol>
+		if s.HasStrategy && s.SaveAmount > 0 {
+			<div class="save-banner">Following this plan instead of foreclosing today saves { formatINR(s.SaveAmount) }</div>
+		}
+		if lp.ReduceTenure.InterestSaved > 0 {
+			<div class="plan-aside">
+				<div class="plan-aside-head">If you keep the loan running instead</div>
+				<div>Paying { formatINR(lp.Lumpsum) } against the principal and holding your EMI at { formatINR(lp.CurrentEMI) } rather than lowering it ends the loan { itoa(lp.ReduceTenure.MonthsSaved) } months early and saves { formatINR(lp.ReduceTenure.InterestSaved) } in interest.</div>
+				if lp.TenureAdvantage > 0 {
+					<div class="plan-aside-sub">Taking the smaller EMI instead would save { formatINR(lp.TenureAdvantage) } less, for the same money paid.</div>
+				}
+			</div>
+		}
 	</div>
 }
 
@@ -219,7 +247,7 @@ templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.Strateg
 	@Stats(stats)
 	@EmiChart(chart)
 	@BankCost(bank)
-	@LumpsumPanel(lump, bank.Name)
+	@ExitPlan(strategy, lump, bank.Name)
 	@StrategyPanel(strategy)
 	@RecommendBanner(rec)
 	@ComparisonPies(stats, strategy)
@@ -253,43 +281,6 @@ templ EmiChart(c loancalc.ChartData) {
 		</div>
 	</div>
 }
-
-templ LumpsumPanel(r loancalc.LumpsumResult, lenderName string) {
-	<div id="lumpsumPanel" hx-swap-oob="true">
-		<h2>What a lumpsum payment would do</h2>
-		<div class="h2sub">If you have spare money today, paying it against the principal changes what happens next. Banks usually offer two choices, and they are not worth the same.</div>
-		<div class="lump-note">{ lumpFreeNote(lenderName, r.FreePct, r.FreeAllowance, r.Lumpsum, r.LumpsumIsFree) }</div>
-		<div class="duel duel-3">
-			<div class="card">
-				<h3>Do nothing</h3>
-				<div class="row"><span>Your EMI</span><b>{ formatINR(r.Baseline.EMI) }</b></div>
-				<div class="row"><span>Time left</span><b>{ lumpMonthsLine(r.Baseline.Months) }</b></div>
-				<div class="row"><span>Interest still to pay</span><b>{ formatINR(r.Baseline.TotalInterest) }</b></div>
-				<div class="lump-explain">You carry on exactly as you are. This is the comparison point.</div>
-			</div>
-			<div class="card">
-				<h3>Pay lumpsum, reduce your EMI</h3>
-				<div class="row"><span>New EMI</span><b>{ formatINR(r.ReduceEMI.EMI) }</b></div>
-				<div class="row"><span>Monthly saving</span><b>{ formatINR(r.ReduceEMI.EMIReduction) }</b></div>
-				<div class="row"><span>Time left</span><b>{ lumpMonthsLine(r.ReduceEMI.Months) }</b></div>
-				<div class="total"><span>Interest saved</span><span class="countup" data-value={ f2(r.ReduceEMI.InterestSaved) }>{ formatINR(r.ReduceEMI.InterestSaved) }</span></div>
-				<div class="lump-explain">Your monthly payment drops, but the loan still runs to the same end date. Easier on cash flow each month.</div>
-			</div>
-			<div class="card win">
-				<h3>Pay lumpsum, finish sooner</h3>
-				<div class="row"><span>EMI</span><b>{ formatINR(r.ReduceTenure.EMI) }</b></div>
-				<div class="row"><span>Monthly saving</span><b>Nothing, EMI stays</b></div>
-				<div class="row"><span>Time left</span><b>{ lumpFinishLine(r.ReduceTenure.Months, r.ReduceTenure.MonthsSaved) }</b></div>
-				<div class="total"><span>Interest saved</span><span class="countup" data-value={ f2(r.ReduceTenure.InterestSaved) }>{ formatINR(r.ReduceTenure.InterestSaved) }</span></div>
-				<div class="lump-explain">You keep paying the same amount, but the loan ends earlier. You stop paying interest sooner, which is why this saves more.</div>
-			</div>
-		</div>
-		if r.TenureAdvantage > 0 {
-			<div class="save-banner">{ lumpHeadline(r.TenureAdvantage) }</div>
-		}
-	</div>
-}
-
 templ RecommendBanner(r loancalc.Recommendation) {
 	<div id="recommendBanner" hx-swap-oob="true">
 		if r.HasAction {

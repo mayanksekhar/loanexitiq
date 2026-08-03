@@ -54,6 +54,7 @@ func computeBankCost(amount, rate float64, tenure, exit, bankIdx int) templates.
 		Fee:          r.Fee,
 		FeePct:       r.FeePct,
 		Outstanding:  r.Outstanding,
+		ChequeToday:  r.ChequeToday,
 		ExitMonth:    r.ExitMonth,
 		SelectedIdx:  bankIdx,
 		Total:        r.Total,
@@ -79,7 +80,12 @@ func computeLumpsum(amount, rate float64, tenure, exit, lumpPct, bankIdx int) lo
 		bankIdx = 0
 	}
 	if lumpPct < 0 {
-		lumpPct = 0
+		// -1 means: use the largest part-payment this lender allows free
+		free := loancalc.Lenders[bankIdx].FreePartPayPct(exit)
+		if free > 25 {
+			free = 25
+		}
+		lumpPct = int(free)
 	}
 	if lumpPct > 100 {
 		lumpPct = 100
@@ -99,7 +105,7 @@ func main() {
 		stats := computeStats(30000000, 10.5, 60, 18)
 		bank := computeBankCost(30000000, 10.5, 60, 18, 0)
 		chart := computeChart(30000000, 10.5, 60, 18)
-		lump := computeLumpsum(30000000, 10.5, 60, 18, 25, 0)
+		lump := computeLumpsum(30000000, 10.5, 60, 18, -1, 0)
 		strategy := computeStrategyResult(30000000, 10.5, 60, 18, 0)
 		rec := loancalc.Recommend(loancalc.Lenders[0], strategy, lump)
 		templ.Handler(templates.Index(stats, bank, strategy, chart, lump, rec)).ServeHTTP(c.Writer, c.Request)
@@ -114,9 +120,8 @@ func main() {
 
 		stats := computeStats(amount, rate, tenure, exit)
 		bank := computeBankCost(amount, rate, tenure, exit, bankIdx)
-		lumpPct, _ := strconv.Atoi(c.PostForm("lumppct"))
 		chart := computeChart(amount, rate, tenure, exit)
-		lump := computeLumpsum(amount, rate, tenure, exit, lumpPct, bankIdx)
+		lump := computeLumpsum(amount, rate, tenure, exit, -1, bankIdx)
 		safeIdx := bankIdx
 		if safeIdx < 0 || safeIdx >= len(loancalc.Lenders) {
 			safeIdx = 0

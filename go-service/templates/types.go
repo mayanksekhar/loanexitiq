@@ -58,6 +58,7 @@ type LenderResult struct {
 	Fee          float64
 	FeePct       float64
 	Outstanding  float64
+	ChequeToday  float64
 	ExitMonth    int
 	SelectedIdx  int
 	Total        float64
@@ -144,4 +145,11 @@ func totalExitLine(total float64) string {
 
 func outstandingLine(outstanding float64) string {
 	return "You must also repay the " + formatINR(outstanding) + " you still owe."
+}
+
+func chequeBreakdown(outstanding, fee float64) string {
+	if fee <= 0 {
+		return formatINR(outstanding) + " of principal you still owe, and no exit fee."
+	}
+	return formatINR(outstanding) + " of principal you still owe, plus " + formatINR(fee) + " in fee and GST."
 }
