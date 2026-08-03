@@ -36,7 +36,15 @@ templ Layout(title string) {
 
 templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, rec loancalc.Recommendation) {
 	@Layout("LoanExitIQ") {
-		<h1>LoanExitIQ</h1>
+		<header>
+			<div class="wrap brandrow">
+				<div>
+					<div class="brand">LOANEXIT<em>IQ</em></div>
+					<div class="tag">The loan exit engine</div>
+				</div>
+				<div class="pill">Pilot · Gurgaon</div>
+			</div>
+		</header>
 		<div class="tabs">
 			<button type="button" id="tabCalcBtn" class="tab-btn active" onclick="showTab('calc')">Calculator</button>
 			<button type="button" id="tabSuggBtn" class="tab-btn" onclick="showTab('suggestion')">LoanExit AI-IQ Suggestion</button>
@@ -91,6 +99,9 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 			@LumpsumPanel(lump, bank.Name)
 			@StrategyPanel(strategy)
 		</div>
+		<footer>
+			<b>Informational tool, not financial advice.</b> Interest rates shown are indicative assumptions, not live rate cards. Fee structures are taken from lenders' published schedules of charges, but actual terms are governed by your own sanction letter and Key Fact Statement. Business-purpose loans sanctioned before 1 Jan 2026 are not covered by RBI's prepayment charge directions, so contract clauses apply. Always request the official foreclosure statement from your lender before deciding.
+		</footer>
 	}
 }
 

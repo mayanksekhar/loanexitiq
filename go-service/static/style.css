@@ -174,3 +174,11 @@ footer b { color: var(--text); }
 .rec-action .rec-headline { color: var(--gold); }
 .rec-detail { font-size: 14px; color: var(--text); opacity: .85; line-height: 1.6; max-width: 760px; }
 .rec-saving { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: var(--gold); }
+
+/* header must span full width, so exempt it from the body content inset */
+body > header { max-width: none; margin: 0; padding-left: 0; padding-right: 0; }
+header .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+.brand em { font-style: normal; color: var(--gold); }
+.tag { margin-top: 4px; }
+.tabs { margin-top: 0; }
+footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
