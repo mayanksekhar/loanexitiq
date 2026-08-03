@@ -230,3 +230,11 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
   color: var(--muted);
 }
 .tab-btn.active { background: var(--panel2); color: var(--gold); border-color: var(--gold); }
+
+/* tabs must sit on the same content inset as the header wordmark and the control cards */
+.tabs {
+  max-width: 1180px;
+  margin: 22px auto 18px;
+  padding: 0 28px;
+  box-sizing: border-box;
+}
