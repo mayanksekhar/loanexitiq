@@ -60,7 +60,7 @@ func computeBankCost(amount, rate float64, tenure, exit, bankIdx int) templates.
 
 func computeStrategyResult(amount, rate float64, tenure, exit, lenderIdx int) loancalc.StrategyResult {
 	exit = clampExit(tenure, exit)
-	if lenderIdx < 0 || lenderIdx >= len(loancalc.StrategyLenders) {
+	if lenderIdx < 0 || lenderIdx >= len(loancalc.Lenders) {
 		lenderIdx = 0
 	}
 	return loancalc.ComputeStrategy(amount, rate, tenure, exit, true, lenderIdx)
@@ -85,11 +85,10 @@ func main() {
 		tenure, _ := strconv.Atoi(c.PostForm("tenure"))
 		exit, _ := strconv.Atoi(c.PostForm("exit"))
 		bankIdx, _ := strconv.Atoi(c.PostForm("bank"))
-		lenderIdx, _ := strconv.Atoi(c.PostForm("lender"))
 
 		stats := computeStats(amount, rate, tenure, exit)
 		bank := computeBankCost(amount, rate, tenure, exit, bankIdx)
-		strategy := computeStrategyResult(amount, rate, tenure, exit, lenderIdx)
+		strategy := computeStrategyResult(amount, rate, tenure, exit, bankIdx)
 		templ.Handler(templates.CalcResponse(stats, bank, strategy)).ServeHTTP(c.Writer, c.Request)
 	})
 

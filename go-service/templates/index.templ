@@ -71,15 +71,6 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 						oninput="document.getElementById('vExit').textContent=this.value"
 						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
-				<label>
-					Exit strategy lender
-					<span class="val">&nbsp;</span>
-					<select name="lender" hx-post="/calculate" hx-trigger="change" hx-target="#stats" hx-include="#calcTab">
-						for i, l := range loancalc.StrategyLenders {
-							<option value={ itoa(i) }>{ l.Name }</option>
-						}
-					</select>
-				</label>
 			</div>
 			<div id="stats">
 				@Stats(stats)
