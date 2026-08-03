@@ -62,3 +62,20 @@ non-home loan).
   Pre-payment Charges Directions exempt floating-rate business loans to
   individuals/MSEs (up to Rs 50 lakh for AU/SFBs) sanctioned on or after that
   date, which several sources above note in passing.
+
+## Deferred: LLM explanation layer
+
+A local Ollama layer was prototyped to turn the computed recommendation into
+plain language, then deferred to the pilot phase.
+
+A probe against llama3.2:1b produced four failures on a single response:
+it invented an EMI figure that appeared nowhere in the supplied facts, inverted
+the advice from a single lumpsum into smaller monthly payments, misread "11
+months sooner" as "11 months total", and attributed the recommendation to the
+lender rather than to this tool.
+
+Any future LLM layer must therefore ship with a numeric guard: extract every
+figure from the generated text and reject the response if any number is absent
+from the facts passed in, falling back to the deterministic recommendation text.
+The model may rephrase, never compute. Tagline references to AI should be
+treated as pending that work.

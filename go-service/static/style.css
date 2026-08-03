@@ -182,3 +182,27 @@ header .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
 .tag { margin-top: 4px; }
 .tabs { margin-top: 0; }
 footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
+
+/* shine sweep on gold banners */
+.save-banner, .rec-action { position: relative; overflow: hidden; }
+.save-banner::before, .rec-action::before {
+  content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(233,180,76,.10), transparent);
+  animation: sweep 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sweep { 0% { left: -60%; } 55% { left: 130%; } 100% { left: 130%; } }
+
+/* winning card lift */
+.card.win { position: relative; box-shadow: 0 0 0 1px rgba(233,180,76,.15), 0 8px 30px -12px rgba(233,180,76,.25); }
+.card { transition: border-color .3s ease, box-shadow .3s ease; }
+
+/* value transitions */
+.bank-total, .rec-saving, .save-banner { transition: color .3s ease; }
+.countup { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .save-banner::before, .rec-action::before { animation: none; }
+  .card { transition: none; }
+}

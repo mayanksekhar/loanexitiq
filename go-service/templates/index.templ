@@ -15,21 +15,7 @@ templ Layout(title string) {
 	</head>
 	<body>
 		{ children... }
-		<script>
-			function fmtINR(n) {
-				n = Number(n);
-				var abs = Math.abs(n);
-				if (abs >= 1e7) return "Rs " + (n / 1e7).toFixed(2) + " Cr";
-				if (abs >= 1e5) return "Rs " + (n / 1e5).toFixed(2) + " L";
-				return "Rs " + Math.round(n).toLocaleString("en-IN");
-			}
-			function showTab(name) {
-				document.getElementById('calcTab').style.display = name === 'calc' ? '' : 'none';
-				document.getElementById('suggestionTabWrapper').style.display = name === 'suggestion' ? '' : 'none';
-				document.getElementById('tabCalcBtn').classList.toggle('active', name === 'calc');
-				document.getElementById('tabSuggBtn').classList.toggle('active', name === 'suggestion');
-			}
-		</script>
+		<script src="/static/app.js"></script>
 	</body>
 	</html>
 }
@@ -40,7 +26,7 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 			<div class="wrap brandrow">
 				<div>
 					<div class="brand">LOANEXIT<em>IQ</em></div>
-					<div class="tag">The loan exit engine</div>
+					<div class="tag">Smartest Loan Exit Strategy Powered by Thinkwerke AI</div>
 				</div>
 				<div class="pill">Pilot · Gurgaon</div>
 			</div>
@@ -131,7 +117,7 @@ templ BankCost(b LenderResult) {
 				</select>
 			</label>
 		</div>
-		<div class="bank-total">{ formatINR(b.Total) }</div>
+		<div class="bank-total countup" data-value={ f2(b.Total) }>{ formatINR(b.Total) }</div>
 		<div class="bank-detail">
 			<div>Interest rate: { ratePctStr(b.RatePct) }% p.a. (assumed)</div>
 			<div>Foreclosure fee at this exit month: { ratePctStr(b.FeePct) }%</div>
@@ -272,7 +258,7 @@ templ LumpsumPanel(r loancalc.LumpsumResult, lenderName string) {
 				<div class="row"><span>New EMI</span><b>{ formatINR(r.ReduceEMI.EMI) }</b></div>
 				<div class="row"><span>Monthly saving</span><b>{ formatINR(r.ReduceEMI.EMIReduction) }</b></div>
 				<div class="row"><span>Time left</span><b>{ lumpMonthsLine(r.ReduceEMI.Months) }</b></div>
-				<div class="total"><span>Interest saved</span><span>{ formatINR(r.ReduceEMI.InterestSaved) }</span></div>
+				<div class="total"><span>Interest saved</span><span class="countup" data-value={ f2(r.ReduceEMI.InterestSaved) }>{ formatINR(r.ReduceEMI.InterestSaved) }</span></div>
 				<div class="lump-explain">Your monthly payment drops, but the loan still runs to the same end date. Easier on cash flow each month.</div>
 			</div>
 			<div class="card win">
@@ -280,7 +266,7 @@ templ LumpsumPanel(r loancalc.LumpsumResult, lenderName string) {
 				<div class="row"><span>EMI</span><b>{ formatINR(r.ReduceTenure.EMI) }</b></div>
 				<div class="row"><span>Monthly saving</span><b>Nothing, EMI stays</b></div>
 				<div class="row"><span>Time left</span><b>{ lumpFinishLine(r.ReduceTenure.Months, r.ReduceTenure.MonthsSaved) }</b></div>
-				<div class="total"><span>Interest saved</span><span>{ formatINR(r.ReduceTenure.InterestSaved) }</span></div>
+				<div class="total"><span>Interest saved</span><span class="countup" data-value={ f2(r.ReduceTenure.InterestSaved) }>{ formatINR(r.ReduceTenure.InterestSaved) }</span></div>
 				<div class="lump-explain">You keep paying the same amount, but the loan ends earlier. You stop paying interest sooner, which is why this saves more.</div>
 			</div>
 		</div>
