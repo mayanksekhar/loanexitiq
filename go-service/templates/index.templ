@@ -34,7 +34,7 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult) {
+templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, rec loancalc.Recommendation) {
 	@Layout("LoanExitIQ") {
 		<h1>LoanExitIQ</h1>
 		<div class="tabs">
@@ -84,11 +84,12 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 			</div>
 			@EmiChart(chart)
 			@BankCost(bank)
-			@LumpsumPanel(lump, bank.Name)
-			@StrategyPanel(strategy)
 		</div>
 		<div id="suggestionTabWrapper" class="tab-panel" style="display:none">
+			@RecommendBanner(rec)
 			@ComparisonPies(stats, strategy)
+			@LumpsumPanel(lump, bank.Name)
+			@StrategyPanel(strategy)
 		</div>
 	}
 }
@@ -203,12 +204,13 @@ templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
 	</div>
 }
 
-templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult) {
+templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, rec loancalc.Recommendation) {
 	@Stats(stats)
 	@EmiChart(chart)
 	@BankCost(bank)
 	@LumpsumPanel(lump, bank.Name)
 	@StrategyPanel(strategy)
+	@RecommendBanner(rec)
 	@ComparisonPies(stats, strategy)
 }
 
@@ -273,6 +275,25 @@ templ LumpsumPanel(r loancalc.LumpsumResult, lenderName string) {
 		</div>
 		if r.TenureAdvantage > 0 {
 			<div class="save-banner">{ lumpHeadline(r.TenureAdvantage) }</div>
+		}
+	</div>
+}
+
+templ RecommendBanner(r loancalc.Recommendation) {
+	<div id="recommendBanner" hx-swap-oob="true">
+		if r.HasAction {
+			<div class="rec-card rec-action">
+				<div class="rec-label">Our suggestion</div>
+				<div class="rec-headline">{ r.Headline }</div>
+				<div class="rec-detail">{ r.Detail }</div>
+				<div class="rec-saving">{ r.SavingText }</div>
+			</div>
+		} else {
+			<div class="rec-card">
+				<div class="rec-label">Our suggestion</div>
+				<div class="rec-headline">{ r.Headline }</div>
+				<div class="rec-detail">{ r.Detail }</div>
+			</div>
 		}
 	</div>
 }

@@ -99,7 +99,8 @@ func main() {
 		chart := computeChart(30000000, 10.5, 60, 18)
 		lump := computeLumpsum(30000000, 10.5, 60, 18, 25, 0)
 		strategy := computeStrategyResult(30000000, 10.5, 60, 18, 0)
-		templ.Handler(templates.Index(stats, bank, strategy, chart, lump)).ServeHTTP(c.Writer, c.Request)
+		rec := loancalc.Recommend(loancalc.Lenders[0], strategy, lump)
+		templ.Handler(templates.Index(stats, bank, strategy, chart, lump, rec)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.POST("/calculate", func(c *gin.Context) {
@@ -114,8 +115,13 @@ func main() {
 		lumpPct, _ := strconv.Atoi(c.PostForm("lumppct"))
 		chart := computeChart(amount, rate, tenure, exit)
 		lump := computeLumpsum(amount, rate, tenure, exit, lumpPct, bankIdx)
+		safeIdx := bankIdx
+		if safeIdx < 0 || safeIdx >= len(loancalc.Lenders) {
+			safeIdx = 0
+		}
 		strategy := computeStrategyResult(amount, rate, tenure, exit, bankIdx)
-		templ.Handler(templates.CalcResponse(stats, bank, strategy, chart, lump)).ServeHTTP(c.Writer, c.Request)
+		rec := loancalc.Recommend(loancalc.Lenders[safeIdx], strategy, lump)
+		templ.Handler(templates.CalcResponse(stats, bank, strategy, chart, lump, rec)).ServeHTTP(c.Writer, c.Request)
 	})
 
 	r.Run(":8080")
