@@ -152,6 +152,7 @@ type LenderResult struct {
 	Fee          float64
 	FeePct       float64
 	Outstanding  float64
+	ExitMonth    int
 	SelectedIdx  int
 	Total        float64
 	IsBest       bool
@@ -184,6 +185,7 @@ func ComputeForLender(P, rate float64, tenure, exit int, isFirm bool, lenderIdx 
 		Fee:          fee,
 		FeePct:       feePct,
 		Outstanding:  bal,
+		ExitMonth:    exit,
 		Total:        interestPaid + fee,
 	}
 }

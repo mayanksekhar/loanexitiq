@@ -49,6 +49,15 @@ type LumpsumResult struct {
 	TenureAdvantage float64
 }
 
+// clampZero removes sub-rupee floating point noise so differences that are
+// mathematically zero print as zero rather than as a tiny negative.
+func clampZero(v float64) float64 {
+	if v > -0.5 && v < 0.5 {
+		return 0
+	}
+	return v
+}
+
 // simulate pays a fixed instalment until the balance clears.
 func simulate(bal, annualRate, instalment float64) (months int, totalInterest float64) {
 	r := annualRate / 1200
@@ -121,8 +130,8 @@ func ComputeLumpsum(P, rate float64, tenure, currentMonth int, lump float64, len
 		Months:        aM,
 		EMI:           newE,
 		TotalInterest: aI,
-		InterestSaved: baseI - aI,
-		EMIReduction:  e - newE,
+		InterestSaved: clampZero(baseI - aI),
+		EMIReduction:  clampZero(e - newE),
 		MonthsSaved:   baseM - aM,
 	}
 
@@ -132,11 +141,11 @@ func ComputeLumpsum(P, rate float64, tenure, currentMonth int, lump float64, len
 		Months:        bM,
 		EMI:           e,
 		TotalInterest: bI,
-		InterestSaved: baseI - bI,
+		InterestSaved: clampZero(baseI - bI),
 		EMIReduction:  0,
 		MonthsSaved:   baseM - bM,
 	}
 
-	res.TenureAdvantage = res.ReduceTenure.InterestSaved - res.ReduceEMI.InterestSaved
+	res.TenureAdvantage = clampZero(res.ReduceTenure.InterestSaved - res.ReduceEMI.InterestSaved)
 	return res
 }

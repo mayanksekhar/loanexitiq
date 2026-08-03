@@ -238,3 +238,12 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
   padding: 0 28px;
   box-sizing: border-box;
 }
+
+.cost-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 18px; margin: 4px 0 20px; }
+.cost-block { background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.cost-label { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.cost-value { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 700; line-height: 1.1; }
+.cost-sunk { color: var(--fee); }
+.cost-fee { color: var(--gold); }
+.cost-sub { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+.owed-line { font-weight: 600; color: var(--text); border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 6px; }

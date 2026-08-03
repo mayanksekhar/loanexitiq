@@ -1,5 +1,6 @@
 function fmtINR(n) {
   n = Number(n);
+  if (Math.abs(n) < 0.5) n = 0;
   var abs = Math.abs(n);
   if (abs >= 1e7) return "Rs " + (n / 1e7).toFixed(2) + " Cr";
   if (abs >= 1e5) return "Rs " + (n / 1e5).toFixed(2) + " L";

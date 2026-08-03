@@ -58,6 +58,7 @@ type LenderResult struct {
 	Fee          float64
 	FeePct       float64
 	Outstanding  float64
+	ExitMonth    int
 	SelectedIdx  int
 	Total        float64
 	IsBest       bool
@@ -83,6 +84,9 @@ func donutSlice(part, total float64) string {
 // note: LenderResult.FeePct added for single-bank view
 
 func f2(v float64) string {
+	if v > -0.5 && v < 0.5 {
+		v = 0
+	}
 	return strconv.FormatFloat(v, 'f', 2, 64)
 }
 
@@ -128,4 +132,16 @@ func lumpSavedLine(saved float64) string {
 
 func lumpFinishLine(months, saved int) string {
 	return strconv.Itoa(months) + " months left, " + strconv.Itoa(saved) + " months sooner"
+}
+
+func feeBasisLine(feePct, outstanding float64) string {
+	return ratePctStr(feePct) + "% of " + formatINR(outstanding) + " outstanding"
+}
+
+func totalExitLine(total float64) string {
+	return "Interest already paid plus exit fee: " + formatINR(total)
+}
+
+func outstandingLine(outstanding float64) string {
+	return "You must also repay the " + formatINR(outstanding) + " you still owe."
 }

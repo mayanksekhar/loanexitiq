@@ -117,13 +117,26 @@ templ BankCost(b LenderResult) {
 				</select>
 			</label>
 		</div>
-		<div class="bank-total countup" data-value={ f2(b.Total) }>{ formatINR(b.Total) }</div>
+		<div class="cost-split">
+			<div class="cost-block">
+				<div class="cost-label">Interest already paid</div>
+				<div class="cost-value cost-sunk countup" data-value={ f2(b.InterestPaid) }>{ formatINR(b.InterestPaid) }</div>
+				<div class="cost-sub">Money the bank has kept over { itoa(b.ExitMonth) } months. Gone whether you exit or not.</div>
+			</div>
+			<div class="cost-block">
+				<div class="cost-label">Cost to exit today (fee + GST)</div>
+				<div class="cost-value cost-fee countup" data-value={ f2(b.Fee) }>{ formatINR(b.Fee) }</div>
+				if b.FeePct > 0 {
+					<div class="cost-sub">{ feeBasisLine(b.FeePct, b.Outstanding) }, plus 18% GST.</div>
+				} else {
+					<div class="cost-sub">This lender charges no foreclosure fee at this point.</div>
+				}
+			</div>
+		</div>
 		<div class="bank-detail">
+			<div class="owed-line">{ outstandingLine(b.Outstanding) }</div>
 			<div>Interest rate: { ratePctStr(b.RatePct) }% p.a. (as entered above)</div>
-			<div>Outstanding at this exit month: { formatINR(b.Outstanding) }</div>
-			<div>Foreclosure fee at this exit month: { ratePctStr(b.FeePct) }%</div>
-			<div>Interest paid over holding period: { formatINR(b.InterestPaid) }</div>
-			<div>Foreclosure fee + GST: { formatINR(b.Fee) }</div>
+			<div>{ totalExitLine(b.Total) }</div>
 			<div class="bank-note">{ b.Note }</div>
 		</div>
 	</div>
