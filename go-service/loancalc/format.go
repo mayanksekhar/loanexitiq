@@ -16,18 +16,18 @@ func commas(n int64) string {
 	if len(s) <= 3 {
 		return neg + s
 	}
-	var out string
-	rem := len(s) % 3
-	if rem > 0 {
-		out = s[:rem]
+	// Indian grouping: last three digits, then pairs.
+	last3 := s[len(s)-3:]
+	rest := s[:len(s)-3]
+	out := ""
+	for len(rest) > 2 {
+		out = "," + rest[len(rest)-2:] + out
+		rest = rest[:len(rest)-2]
 	}
-	for i := rem; i < len(s); i += 3 {
-		if out != "" {
-			out += ","
-		}
-		out += s[i : i+3]
+	if len(rest) > 0 {
+		out = rest + out
 	}
-	return neg + out
+	return neg + out + "," + last3
 }
 
 func itoa(n int) string {

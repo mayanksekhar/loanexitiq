@@ -1,6 +1,14 @@
+// Matches the Go formatter exactly so a value does not change shape
+// when the countup animation finishes.
 function fmtINR(n) {
   n = Number(n);
   if (Math.abs(n) < 0.5) n = 0;
+  return "Rs " + Math.round(n).toLocaleString("en-IN");
+}
+
+// Short form, used only for slider readouts where space is tight.
+function fmtShort(n) {
+  n = Number(n);
   var abs = Math.abs(n);
   if (abs >= 1e7) return "Rs " + (n / 1e7).toFixed(2) + " Cr";
   if (abs >= 1e5) return "Rs " + (n / 1e5).toFixed(2) + " L";

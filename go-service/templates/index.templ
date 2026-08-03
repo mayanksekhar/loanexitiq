@@ -41,7 +41,7 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 					Loan amount (Rs)
 					<span id="vAmt" class="val">Rs 3.00 Cr</span>
 					<input type="range" name="amount" min="5000000" max="100000000" step="500000" value="30000000"
-						oninput="document.getElementById('vAmt').textContent=fmtINR(this.value)"
+						oninput="document.getElementById('vAmt').textContent=fmtShort(this.value)"
 						hx-post="/calculate" hx-trigger="input changed delay:200ms" hx-target="#stats" hx-include="#calcTab"/>
 				</label>
 				<label>
