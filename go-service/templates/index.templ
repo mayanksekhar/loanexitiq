@@ -76,7 +76,6 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 			@RecommendBanner(plan)
 			@ComparisonPies(stats, strategy)
 			@ExitPlan(plan, bank.Name)
-			@StrategyPanel(strategy)
 		</div>
 		<footer>
 			<b>Informational tool, not financial advice.</b> Interest rates shown are indicative assumptions, not live rate cards. Fee structures are taken from lenders' published schedules of charges, but actual terms are governed by your own sanction letter and Key Fact Statement. Business-purpose loans sanctioned before 1 Jan 2026 are not covered by RBI's prepayment charge directions, so contract clauses apply. Always request the official foreclosure statement from your lender before deciding.
@@ -142,12 +141,32 @@ templ BankCost(b LenderResult) {
 templ ExitPlan(p loancalc.PlanResult, lenderName string) {
 	<div id="lumpsumPanel" hx-swap-oob="true">
 		if p.HasAction {
+			<h2>If you want out of this loan</h2>
 			if len(p.ExitLevers) > 0 {
-				<h2>If you want out of this loan</h2>
 				<div class="h2sub">These use { lenderName }'s own clauses to cut the charge for leaving. They cost nothing beyond the balance you already owe.</div>
 				for i, lv := range p.ExitLevers {
 					@LeverCard(lv, i, false)
 				}
+			} else {
+				<div class="verdict">
+					<div class="verdict-head">Cheapest way out</div>
+					<div class="verdict-body">{ p.ExitVerdict }</div>
+					if p.RejectedNote != "" {
+						<div class="verdict-rejected">{ p.RejectedNote }</div>
+					}
+				</div>
+				<ol class="plan">
+					for j, st := range p.CloseSteps {
+						<li class="plan-step">
+							<div class="plan-num">{ itoa(j + 1) }</div>
+							<div class="plan-body">
+								<div class="plan-when">{ st.When }</div>
+								<div class="plan-action">{ st.Action }</div>
+								<div class="plan-why">{ st.Why }</div>
+							</div>
+						</li>
+					}
+				</ol>
 			}
 			if len(p.HoldLevers) > 0 {
 				<h2>If you are keeping this loan running</h2>
@@ -196,35 +215,6 @@ templ LeverCard(lv loancalc.Lever, i int, showRatio bool) {
 	</div>
 }
 
-templ StrategyPanel(s loancalc.StrategyResult) {
-	<div id="strategyPanel" hx-swap-oob="true">
-		<h2>Exit strategy: { s.Title }</h2>
-		<p>{ s.Mechanics }</p>
-		<div class="card">
-			<h3>Foreclose today</h3>
-			<div>Outstanding: { formatINR(s.Outstanding) }</div>
-			<div>Foreclosure fee { ratePctStr(s.FeePctNow) }%: { formatINR(s.FeeNow) }</div>
-			<div>GST 18% on fee: { formatINR(s.GstNow) }</div>
-			<div>Exit cost: { formatINR(s.TotalNow) }</div>
-		</div>
-		if s.HasStrategy {
-			<div class="card">
-				<h3>{ s.Title }</h3>
-				for _, row := range s.Rows {
-					<div>{ row.Label }: { row.Value }</div>
-				}
-				<div>Exit cost: { formatINR(s.TotalStrategy) }</div>
-			</div>
-			if s.SaveAmount >= 0 {
-				<div class="save-banner">Net saving vs foreclosing today: { formatINR(s.SaveAmount) }</div>
-			} else {
-				<div class="save-banner-negative">This strategy costs more than foreclosing today: { formatINR(-1 * s.SaveAmount) } extra</div>
-			}
-		} else {
-			<div class="card">No verified escape route in the exit-clause matrix for this lender.</div>
-		}
-	</div>
-}
 
 templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
 	<div id="suggestionTab" hx-swap-oob="true">
@@ -274,7 +264,6 @@ templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.Strateg
 	@EmiChart(chart)
 	@BankCost(bank)
 	@ExitPlan(plan, bank.Name)
-	@StrategyPanel(strategy)
 	@RecommendBanner(plan)
 	@ComparisonPies(stats, strategy)
 }

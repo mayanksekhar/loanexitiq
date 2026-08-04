@@ -37,6 +37,14 @@ type PlanResult struct {
 	Best        Lever
 	HasAction   bool
 	NoActionWhy string
+
+	// ExitCostToday is what closing right now costs in fee and GST.
+	ExitCostToday float64
+	// ExitVerdict explains the cheapest way out when no clause improves on
+	// simply closing, including which strategies were modelled and rejected.
+	ExitVerdict  string
+	RejectedNote string
+	CloseSteps   []PlanStep
 }
 
 // BuildPlan gathers every lever available on this loan and ranks them by saving.
@@ -46,6 +54,12 @@ func BuildPlan(P, rate float64, tenure, exit int, isFirm bool, lenderIdx int) Pl
 
 	// 1. Fee lever: only exists where a fee exists and a clause can reduce it.
 	s := ComputeStrategy(P, rate, tenure, exit, isFirm, lenderIdx)
+	rejected := ""
+	if s.HasStrategy && s.SaveAmount <= 0 {
+		rejected = "We modelled " + lowerFirst(s.Title) + " for this loan. On your numbers it would cost " +
+			formatINR(-s.SaveAmount) + " more than simply closing today, because the interest carried while waiting " +
+			"outweighs the fee it avoids. We are not recommending it."
+	}
 	if s.HasStrategy && s.SaveAmount > 0 && len(s.Steps) > 0 {
 		levers = append(levers, Lever{
 			Kind:      LeverFee,
@@ -185,6 +199,25 @@ func BuildPlan(P, rate float64, tenure, exit int, isFirm bool, lenderIdx int) Pl
 	sort.SliceStable(res.ExitLevers, func(i, j int) bool { return res.ExitLevers[i].Saving > res.ExitLevers[j].Saving })
 	sort.SliceStable(res.HoldLevers, func(i, j int) bool { return res.HoldLevers[i].PerRupee > res.HoldLevers[j].PerRupee })
 
+	res.RejectedNote = rejected
+	res.ExitCostToday = s.TotalNow
+	res.CloseSteps = []PlanStep{{
+		When: "Today", Amount: s.Outstanding + s.TotalNow,
+		Action: "Pay " + formatINR(s.Outstanding+s.TotalNow) + " and the loan is closed",
+		Why: formatINR(s.Outstanding) + " is the principal you still owe. " +
+			closeFeeClause(s.TotalNow, l.Name),
+	}}
+	if len(res.ExitLevers) == 0 {
+		switch {
+		case s.TotalNow <= 0:
+			res.ExitVerdict = l.Name + " charges no foreclosure fee at this point, so closing today is already the cheapest possible exit. There is nothing to time or work around."
+		case rejected != "":
+			res.ExitVerdict = "Closing today is your cheapest way out of this loan."
+		default:
+			res.ExitVerdict = "No clause in " + l.Name + "'s published schedule reduces the exit charge at this point, so closing today is the cheapest way out. Check your sanction letter for waivers that are not published."
+		}
+	}
+
 	res.Levers = append(append([]Lever{}, res.ExitLevers...), res.HoldLevers...)
 	if len(res.ExitLevers) > 0 {
 		res.Best = res.ExitLevers[0]
@@ -205,4 +238,22 @@ func clawbackNote(l Lender) string {
 			" months of this part-payment, " + l.Name + " claws the fee back on the amount you just paid. Either keep the loan running past that window, or use the clause strategy listed separately."
 	}
 	return ""
+}
+
+func closeFeeClause(fee float64, lender string) string {
+	if fee <= 0 {
+		return lender + " adds no foreclosure fee, so that is the whole amount."
+	}
+	return "On top of that, " + lender + " charges " + formatINR(fee) + " in foreclosure fee and GST."
+}
+
+func lowerFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	b := []rune(s)
+	if b[0] >= 'A' && b[0] <= 'Z' {
+		b[0] = b[0] + 32
+	}
+	return string(b)
 }

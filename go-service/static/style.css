@@ -279,3 +279,7 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
 .lever-ratio { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--equity); font-weight: 500; margin-top: 6px; text-align: right; }
 #lumpsumPanel h2 { margin-top: 30px; }
 #lumpsumPanel h2:first-child { margin-top: 0; }
+.verdict { background: var(--panel2); border: 1px solid var(--equity); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 4px; }
+.verdict-head { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--equity); margin-bottom: 8px; }
+.verdict-body { font-size: 15px; color: var(--text); line-height: 1.55; }
+.verdict-rejected { font-size: 13px; color: var(--muted); line-height: 1.55; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
