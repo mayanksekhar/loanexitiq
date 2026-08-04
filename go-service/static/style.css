@@ -263,3 +263,19 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
 .plan-aside { background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-top: 18px; font-size: 14px; line-height: 1.6; }
 .plan-aside-head { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .plan-aside-sub { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+.lever { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 16px; background: var(--panel2); }
+.lever:first-of-type { border-color: var(--gold); }
+.lever-head { display: grid; grid-template-columns: 34px 1fr auto; gap: 14px; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.lever-rank { width: 30px; height: 30px; border-radius: 8px; background: var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 14px; }
+.lever:first-of-type .lever-rank { background: var(--gold); color: var(--ink); }
+.lever-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.lever-summary { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.lever-save { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+.lever .plan-step { padding: 12px 0; }
+.lever .plan-action { font-size: 15px; }
+.lever-req { font-size: 12px; color: var(--gold); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+.lever-save-sub { display: block; font-family: -apple-system, sans-serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin-top: 2px; text-align: right; }
+.lever-ratio { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--equity); font-weight: 500; margin-top: 6px; text-align: right; }
+#lumpsumPanel h2 { margin-top: 30px; }
+#lumpsumPanel h2:first-child { margin-top: 0; }

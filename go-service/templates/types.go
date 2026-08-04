@@ -153,3 +153,7 @@ func chequeBreakdown(outstanding, fee float64) string {
 	}
 	return formatINR(outstanding) + " of principal you still owe, plus " + formatINR(fee) + " in fee and GST."
 }
+
+func perRupeeLine(v float64) string {
+	return "Rs " + strconv.FormatFloat(v, 'f', 2, 64) + " back per rupee"
+}

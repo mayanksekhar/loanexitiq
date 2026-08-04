@@ -20,7 +20,7 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, rec loancalc.Recommendation) {
+templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, plan loancalc.PlanResult) {
 	@Layout("LoanExitIQ") {
 		<header>
 			<div class="wrap brandrow">
@@ -73,9 +73,9 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 			@BankCost(bank)
 		</div>
 		<div id="suggestionTabWrapper" class="tab-panel" style="display:none">
-			@RecommendBanner(rec)
+			@RecommendBanner(plan)
 			@ComparisonPies(stats, strategy)
-			@ExitPlan(strategy, lump, bank.Name)
+			@ExitPlan(plan, bank.Name)
 			@StrategyPanel(strategy)
 		</div>
 		<footer>
@@ -139,14 +139,52 @@ templ BankCost(b LenderResult) {
 	</div>
 }
 
-templ ExitPlan(s loancalc.StrategyResult, lp loancalc.LumpsumResult, lenderName string) {
+templ ExitPlan(p loancalc.PlanResult, lenderName string) {
 	<div id="lumpsumPanel" hx-swap-oob="true">
-		<h2>Your exit plan</h2>
-		<div class="h2sub">Built from { lenderName }'s own published terms. Each step says what to pay, when, and which clause makes it work.</div>
+		if p.HasAction {
+			if len(p.ExitLevers) > 0 {
+				<h2>If you want out of this loan</h2>
+				<div class="h2sub">These use { lenderName }'s own clauses to cut the charge for leaving. They cost nothing beyond the balance you already owe.</div>
+				for i, lv := range p.ExitLevers {
+					@LeverCard(lv, i, false)
+				}
+			}
+			if len(p.HoldLevers) > 0 {
+				<h2>If you are keeping this loan running</h2>
+				<div class="h2sub">These reduce the interest you pay from here on. Each needs real money, so they are ranked by how much interest every rupee you commit saves you, not by the biggest headline figure.</div>
+				for i, lv := range p.HoldLevers {
+					@LeverCard(lv, i, true)
+				}
+			}
+		} else {
+			<h2>Your options</h2>
+			<div class="card">{ p.NoActionWhy }</div>
+		}
+	</div>
+}
+
+templ LeverCard(lv loancalc.Lever, i int, showRatio bool) {
+	<div class="lever">
+		<div class="lever-head">
+			<div class="lever-rank">{ itoa(i + 1) }</div>
+			<div>
+				<div class="lever-title">{ lv.Title }</div>
+				<div class="lever-summary">{ lv.Summary }</div>
+				if lv.Requires != "" {
+					<div class="lever-req">Needs: { lv.Requires }</div>
+				}
+			</div>
+			<div class="lever-save">
+				{ formatINR(lv.Saving) }<span class="lever-save-sub">saved</span>
+				if showRatio && lv.PerRupee > 0 {
+					<span class="lever-ratio">{ perRupeeLine(lv.PerRupee) }</span>
+				}
+			</div>
+		</div>
 		<ol class="plan">
-			for i, st := range s.Steps {
+			for j, st := range lv.Steps {
 				<li class="plan-step">
-					<div class="plan-num">{ itoa(i + 1) }</div>
+					<div class="plan-num">{ itoa(j + 1) }</div>
 					<div class="plan-body">
 						<div class="plan-when">{ st.When }</div>
 						<div class="plan-action">{ st.Action }</div>
@@ -155,18 +193,6 @@ templ ExitPlan(s loancalc.StrategyResult, lp loancalc.LumpsumResult, lenderName 
 				</li>
 			}
 		</ol>
-		if s.HasStrategy && s.SaveAmount > 0 {
-			<div class="save-banner">Following this plan instead of foreclosing today saves { formatINR(s.SaveAmount) }</div>
-		}
-		if lp.ReduceTenure.InterestSaved > 0 {
-			<div class="plan-aside">
-				<div class="plan-aside-head">If you keep the loan running instead</div>
-				<div>Paying { formatINR(lp.Lumpsum) } against the principal and holding your EMI at { formatINR(lp.CurrentEMI) } rather than lowering it ends the loan { itoa(lp.ReduceTenure.MonthsSaved) } months early and saves { formatINR(lp.ReduceTenure.InterestSaved) } in interest.</div>
-				if lp.TenureAdvantage > 0 {
-					<div class="plan-aside-sub">Taking the smaller EMI instead would save { formatINR(lp.TenureAdvantage) } less, for the same money paid.</div>
-				}
-			</div>
-		}
 	</div>
 }
 
@@ -243,13 +269,13 @@ templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
 	</div>
 }
 
-templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, rec loancalc.Recommendation) {
+templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, plan loancalc.PlanResult) {
 	@Stats(stats)
 	@EmiChart(chart)
 	@BankCost(bank)
-	@ExitPlan(strategy, lump, bank.Name)
+	@ExitPlan(plan, bank.Name)
 	@StrategyPanel(strategy)
-	@RecommendBanner(rec)
+	@RecommendBanner(plan)
 	@ComparisonPies(stats, strategy)
 }
 
@@ -281,20 +307,20 @@ templ EmiChart(c loancalc.ChartData) {
 		</div>
 	</div>
 }
-templ RecommendBanner(r loancalc.Recommendation) {
+templ RecommendBanner(p loancalc.PlanResult) {
 	<div id="recommendBanner" hx-swap-oob="true">
-		if r.HasAction {
+		if p.HasAction {
 			<div class="rec-card rec-action">
-				<div class="rec-label">Our suggestion</div>
-				<div class="rec-headline">{ r.Headline }</div>
-				<div class="rec-detail">{ r.Detail }</div>
-				<div class="rec-saving">{ r.SavingText }</div>
+				<div class="rec-label">Best move available</div>
+				<div class="rec-headline">{ p.Best.Title }</div>
+				<div class="rec-detail">{ p.Best.Summary }</div>
+				<div class="rec-saving">{ formatINR(p.Best.Saving) } saved</div>
 			</div>
 		} else {
 			<div class="rec-card">
-				<div class="rec-label">Our suggestion</div>
-				<div class="rec-headline">{ r.Headline }</div>
-				<div class="rec-detail">{ r.Detail }</div>
+				<div class="rec-label">Our assessment</div>
+				<div class="rec-headline">No move worth making</div>
+				<div class="rec-detail">{ p.NoActionWhy }</div>
 			</div>
 		}
 	</div>
