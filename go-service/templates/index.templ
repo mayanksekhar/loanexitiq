@@ -20,7 +20,7 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, plan loancalc.PlanResult) {
+templ Index(stats StatsData, bank LenderResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, plan loancalc.PlanResult) {
 	@Layout("LoanExitIQ") {
 		<header>
 			<div class="wrap brandrow">
@@ -74,7 +74,7 @@ templ Index(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult
 		</div>
 		<div id="suggestionTabWrapper" class="tab-panel" style="display:none">
 			@RecommendBanner(plan)
-			@ComparisonPies(stats, strategy)
+			@ComparisonPies(stats, plan)
 			@ExitPlan(plan, bank.Name)
 		</div>
 		<footer>
@@ -216,56 +216,62 @@ templ LeverCard(lv loancalc.Lever, i int, showRatio bool) {
 }
 
 
-templ ComparisonPies(stats StatsData, strategy loancalc.StrategyResult) {
+templ ComparisonPies(stats StatsData, p loancalc.PlanResult) {
 	<div id="suggestionTab" hx-swap-oob="true">
-		<h2>LoanExit AI-IQ Suggestion: normal exit vs our suggestion</h2>
+		<div class="bottomline">
+			<div class="bl-label">Thinkwerke AI saves you</div>
+			<div class="bl-value countup" data-value={ f2(p.HeadlineSaving) }>{ formatINR(p.HeadlineSaving) }</div>
+			if p.HeadlineSaving > 0 {
+				<div class="bl-sub">{ p.HeadlinePath }</div>
+			} else {
+				<div class="bl-sub">There is no cheaper route than the one you are already on. That is the honest answer, and it is worth knowing.</div>
+			}
+		</div>
+		<h2>Leaving this loan: the obvious way against our way</h2>
 		<div class="pie-row">
 			<div class="pie-card">
 				<h3>If you foreclose today</h3>
 				<svg viewBox="0 0 100 100" class="pie">
 					<circle cx="50" cy="50" r="40" fill="none" stroke="#223041" stroke-width="18"></circle>
 					<circle cx="50" cy="50" r="40" fill="none" stroke="#FF6B5E" stroke-width="18"
-						stroke-dasharray={ donutSlice(strategy.TotalNow, stats.InterestPaid+strategy.TotalNow) }
+						stroke-dasharray={ donutSlice(p.ExitCostToday, stats.InterestPaid+p.ExitCostToday) }
 						transform="rotate(-90 50 50)"></circle>
 				</svg>
 				<div class="pie-legend">
-					<span><i style="background:#8FA0B3"></i> Interest paid so far: { formatINR(stats.InterestPaid) }</span>
-					<span><i style="background:#FF6B5E"></i> Exit cost today: { formatINR(strategy.TotalNow) }</span>
+					<span><i style="background:#8FA0B3"></i> Interest already paid: { formatINR(stats.InterestPaid) }</span>
+					<span><i style="background:#FF6B5E"></i> Exit charge today: { formatINR(p.ExitCostToday) }</span>
 				</div>
-				<p class="pie-explain">This is what it costs to close the loan right now. The gray part of the circle is interest you've already paid the bank over time, money that's gone either way. The red part is the extra amount you'd pay today just to close the loan early: the foreclosure fee plus tax on top of it.</p>
+				<p class="pie-explain">The grey ring is interest you have already paid, which is gone either way. The red slice is the extra charge for walking away today.</p>
 			</div>
-			if strategy.HasStrategy {
-				<div class="pie-card">
-					<h3>If you follow our suggestion</h3>
-					<svg viewBox="0 0 100 100" class="pie">
-						<circle cx="50" cy="50" r="40" fill="none" stroke="#223041" stroke-width="18"></circle>
-						<circle cx="50" cy="50" r="40" fill="none" stroke="#E9B44C" stroke-width="18"
-							stroke-dasharray={ donutSlice(strategy.TotalStrategy, stats.InterestPaid+strategy.TotalStrategy) }
-							transform="rotate(-90 50 50)"></circle>
-					</svg>
-					<div class="pie-legend">
-						<span><i style="background:#8FA0B3"></i> Interest paid so far: { formatINR(stats.InterestPaid) }</span>
-						<span><i style="background:#E9B44C"></i> Exit cost with strategy: { formatINR(strategy.TotalStrategy) }</span>
-					</div>
-					<p class="pie-explain">This shows the same two amounts, but using the suggested strategy instead of closing the loan outright today. The gray part (interest already paid) doesn't change, it's already spent. Compare the size of the gold part here to the red part on the left: a smaller gold slice means the strategy genuinely reduces what you'd pay to exit. If it's the same size or larger, the strategy isn't worth it in this situation, and simply closing the loan today is the cheaper option.</p>
+			<div class="pie-card">
+				<h3>If you follow our suggestion</h3>
+				<svg viewBox="0 0 100 100" class="pie">
+					<circle cx="50" cy="50" r="40" fill="none" stroke="#223041" stroke-width="18"></circle>
+					<circle cx="50" cy="50" r="40" fill="none" stroke="#E9B44C" stroke-width="18"
+						stroke-dasharray={ donutSlice(p.SuggestedExitCost, stats.InterestPaid+p.SuggestedExitCost) }
+						transform="rotate(-90 50 50)"></circle>
+				</svg>
+				<div class="pie-legend">
+					<span><i style="background:#8FA0B3"></i> Interest already paid: { formatINR(stats.InterestPaid) }</span>
+					<span><i style="background:#E9B44C"></i> Exit charge our way: { formatINR(p.SuggestedExitCost) }</span>
 				</div>
-			} else {
-				<div class="pie-card">
-					<h3>No suggested strategy</h3>
-					<p>No verified escape route in the exit-clause matrix for this lender, nothing to compare against.</p>
-				</div>
-			}
+				<p class="pie-explain">{ p.SuggestedExitName }. This slice can never be larger than the red one: if no clause beats closing today, then closing today is our recommendation.</p>
+			</div>
+		</div>
+		<div class="docs-prompt">
+			<div class="docs-head">These figures are modelled, not yours yet</div>
+			<div>Everything above is computed from the values on the sliders. To produce the real number for your loan we need documents you already have: your <b>sanction letter</b>{ " for the actual rate and clause wording" }, your <b>annual interest and principal certificate</b> (the one issued for income tax filing), and, when you are ready to act, the bank's official <b>foreclosure statement</b>. With those three we replace every assumption with a fact and check our figure against the bank's own.</div>
 		</div>
 	</div>
 }
 
-templ CalcResponse(stats StatsData, bank LenderResult, strategy loancalc.StrategyResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, plan loancalc.PlanResult) {
+templ CalcResponse(stats StatsData, bank LenderResult, chart loancalc.ChartData, lump loancalc.LumpsumResult, plan loancalc.PlanResult) {
 	@Stats(stats)
 	@EmiChart(chart)
 	@BankCost(bank)
 	@ExitPlan(plan, bank.Name)
 	@RecommendBanner(plan)
-	@ComparisonPies(stats, strategy)
+	@ComparisonPies(stats, plan)
 }
 
 templ EmiChart(c loancalc.ChartData) {

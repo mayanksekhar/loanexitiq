@@ -283,3 +283,10 @@ footer { max-width: 1180px; margin: 44px auto 0; padding: 18px 28px 0; }
 .verdict-head { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--equity); margin-bottom: 8px; }
 .verdict-body { font-size: 15px; color: var(--text); line-height: 1.55; }
 .verdict-rejected { font-size: 13px; color: var(--muted); line-height: 1.55; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.bottomline { background: linear-gradient(120deg,#1A2230,#141C28); border: 1px solid var(--gold); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; text-align: center; position: relative; overflow: hidden; }
+.bl-label { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.bl-value { font-family: 'IBM Plex Mono', monospace; font-size: 52px; font-weight: 700; color: var(--gold); line-height: 1.05; }
+.bl-sub { font-size: 13px; color: var(--muted); margin-top: 12px; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.55; }
+.docs-prompt { background: var(--panel2); border: 1px solid var(--blue); border-radius: var(--radius); padding: 20px; margin-top: 20px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.docs-head { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.docs-prompt b { color: var(--text); }

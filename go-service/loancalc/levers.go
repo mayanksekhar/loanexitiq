@@ -45,6 +45,16 @@ type PlanResult struct {
 	ExitVerdict  string
 	RejectedNote string
 	CloseSteps   []PlanStep
+
+	// SuggestedExitCost is what leaving costs if the borrower follows us. It can
+	// never exceed ExitCostToday, because when no clause beats closing today,
+	// closing today is our recommendation.
+	SuggestedExitCost float64
+	SuggestedExitName string
+	// HeadlineSaving is the largest single saving available, and the path it
+	// assumes. Exit and hold savings are alternatives, never added together.
+	HeadlineSaving float64
+	HeadlinePath   string
 }
 
 // BuildPlan gathers every lever available on this loan and ranks them by saving.
@@ -216,6 +226,25 @@ func BuildPlan(P, rate float64, tenure, exit int, isFirm bool, lenderIdx int) Pl
 		default:
 			res.ExitVerdict = "No clause in " + l.Name + "'s published schedule reduces the exit charge at this point, so closing today is the cheapest way out. Check your sanction letter for waivers that are not published."
 		}
+	}
+
+	res.SuggestedExitCost = res.ExitCostToday
+	res.SuggestedExitName = "Closing today, which is already the cheapest exit"
+	if len(res.ExitLevers) > 0 {
+		res.SuggestedExitCost = res.ExitCostToday - res.ExitLevers[0].Saving
+		if res.SuggestedExitCost < 0 {
+			res.SuggestedExitCost = 0
+		}
+		res.SuggestedExitName = res.ExitLevers[0].Title
+	}
+
+	if len(res.ExitLevers) > 0 {
+		res.HeadlineSaving = res.ExitLevers[0].Saving
+		res.HeadlinePath = "by cutting the exit charge on " + l.Name + "'s own terms"
+	}
+	if len(res.HoldLevers) > 0 && res.HoldLevers[0].Saving > res.HeadlineSaving {
+		res.HeadlineSaving = res.HoldLevers[0].Saving
+		res.HeadlinePath = "in interest, if you keep the loan running and follow the plan below"
 	}
 
 	res.Levers = append(append([]Lever{}, res.ExitLevers...), res.HoldLevers...)

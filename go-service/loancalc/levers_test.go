@@ -109,3 +109,37 @@ func TestEveryLeverHasCompleteSteps(t *testing.T) {
 		}
 	}
 }
+
+// The core promise: following our advice can never cost more than doing the
+// obvious thing. If closing today is cheapest, closing today is the advice.
+func TestSuggestedExitNeverExceedsClosingToday(t *testing.T) {
+	for i, l := range Lenders {
+		for _, tc := range []struct {
+			P, rate      float64
+			tenure, exit int
+		}{
+			{5.6e7, 10.5, 60, 18},
+			{5e7, 9.5, 240, 120},
+			{3e7, 10.5, 60, 6},
+			{3e7, 10.5, 60, 45},
+		} {
+			p := BuildPlan(tc.P, tc.rate, tc.tenure, tc.exit, true, i)
+			if p.SuggestedExitCost > p.ExitCostToday+1 {
+				t.Errorf("%s at month %d: suggested exit %.0f exceeds closing today %.0f",
+					l.Name, tc.exit, p.SuggestedExitCost, p.ExitCostToday)
+			}
+			if p.SuggestedExitCost < 0 {
+				t.Errorf("%s: negative suggested exit cost", l.Name)
+			}
+		}
+	}
+}
+
+func TestHeadlineSavingIsNeverNegative(t *testing.T) {
+	for i, l := range Lenders {
+		p := BuildPlan(5.6e7, 10.5, 60, 18, true, i)
+		if p.HeadlineSaving < 0 {
+			t.Errorf("%s: negative headline saving %.0f", l.Name, p.HeadlineSaving)
+		}
+	}
+}
