@@ -100,3 +100,32 @@ priced at another lender's published rate. That turns the bank selector into a
 real "which lender would have been cheaper to hold and to exit" comparison
 rather than a fee-only switch. It requires sourced rate data before any of it
 can be shown to a borrower.
+
+## Unverified assumptions in the advice engine
+
+These are judgement calls made during the build, not sourced rules. Each
+materially affects what the app recommends, so they are recorded here rather
+than presented as fact.
+
+- **Ladder cap at 50% of outstanding.** Where a lender caps free part-payment
+  per period (Axis quarterly, HDFC annually), the engine stops adding tranches
+  once the cumulative amount would exceed half the outstanding balance. Without
+  this the "ladder" simply repays the loan in full and reports all avoided
+  interest as a saving, which is not a strategy. The 50% threshold is a
+  judgement about what counts as a strategy rather than repayment, and no
+  lender document supports that specific figure.
+
+- **A 25% part-payment as the default illustrative cheque.** Where a lender
+  permits unlimited free part-payment, the engine models 25% of the outstanding
+  balance as a realistic amount. This is illustrative only. The real figure is
+  whatever the borrower actually has.
+
+- **A 10% EMI increase as the headline suggestion.** The engine computes 5, 10,
+  15 and 20 percent increases and leads with 10 percent as a level most
+  borrowers can absorb. That is a usability choice, not a financial one.
+
+- **Return per rupee committed as the ranking metric** for part-payment and EMI
+  increase. Ranking on headline saving alone favoured options demanding far
+  more cash, which misleads. Ranking on efficiency is a deliberate editorial
+  decision and should be explained to any borrower who asks why the largest
+  number is not shown first.
